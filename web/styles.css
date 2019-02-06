@@ -1,0 +1,135 @@
+body {
+	font-family: Consolas, monaco, monospace;
+}
+
+.ui-dialog-titlebar-close {
+    visibility: hidden;
+}
+
+.ui-dialog { 
+	font-size: 10px;
+}
+
+.ui-autocomplete {
+    max-height: 300px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+}
+
+#mainContainer {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	align-content: center;
+	flex-wrap: wrap;
+}
+
+.wall {
+	font-size: small;
+	padding: 10px;
+	margin: 5px;
+	border: 1px dashed grey;
+	color: grey;
+	text-align: center;	
+}
+
+.wall:empty {
+	content: "<span>(empty)</span>";
+}
+
+.brick {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	border-radius: 5px;	
+	text-align: center;
+	padding: 2px;
+	margin: 1px;
+	color: black;
+	border: 1px solid grey;
+}
+
+.data {
+	background-color: #ffffcc;
+	padding-left: 4px;
+	padding-right: 4px;
+	flex: 1;
+	text-align: left;
+}
+
+.result {
+	background-color: #ffad50;
+	padding-left: 4px;
+	padding-right: 4px;
+	text-align: left;
+}
+
+.funcName {
+	font-weight: bolder;
+	background-color: #ccffff;
+	flex: 1;
+}
+
+.then {
+	border: 1px solid grey;
+	padding-left: 2px;
+	padding-right: 2px;
+	font-weight: bolder;
+	background-color: #F4CDCD;
+	margin-left: 6px;
+	margin-right: 6px;
+}
+
+.paramName {
+	background-color: white;
+	border: 1px solid grey;
+	font-weight: bolder; 
+}
+
+.paramRef {
+	color: blue;
+	text-decoration: underline;
+	font-weight: bolder; 
+}
+
+.horizontal {
+	display: flex !important;
+	justify-content: center;
+	align-content: center;
+}
+
+.vertical {
+	display: flex !important;
+	flex-direction: column;
+	justify-content: center;
+	align-content: center;
+}
+
+.grab {
+	background-color: #E2E2E2;
+	border: 1px outset;
+	margin-right: 2px;
+	width: 10px;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.activeWall {
+	border: 3px solid blue;
+	padding: 8px;
+}
+
+.activeBrick {
+	border: 2px solid blue;
+	margin: 0px;
+}
+
+.wide {
+	flex: 1;
+}
