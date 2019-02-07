@@ -105,6 +105,15 @@ module.exports = {
 		brickUI.getContentContainer().append(content);
 		brickUI.setFocusElem(content);
 
+		brickUI.getChildrenContainer().
+			addClass('noChilds').
+			on('DOMSubtreeModified', function() {
+				if($(this).children().length === 0)
+					$(this).addClass('noChilds');
+				else
+					$(this).removeClass('noChilds');
+			});
+
 		return brickUI;
 	}
 };

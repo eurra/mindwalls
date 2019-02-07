@@ -133,3 +133,9 @@ body, html {
 .wide {
 	flex: 1;
 }
+
+.noChilds {
+	width: 10px;
+	border: 1px dashed grey;
+	border-radius: 5px;
+}

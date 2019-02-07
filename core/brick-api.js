@@ -1,107 +1,87 @@
-function Brick(ui) {
-	let parent = Brick.emptyBrick;
-	let value = null;
-	let name = null;
-	let index = null;
-
-	this.getUI = function() {
-		return ui;
+function setupModel(config = {}) {
+	let baseModel = {
+		onChildValueSet: (child) => {},
+		onChildNameSet: (child) => {},
+		onChildDisposed: (child) => {},
+		onChildAdded: (child) => {}
 	};
 
-	this.dispose = function() {
-		ui.onDispose();
-
-		if(parent !== null)
-			parent.onChildDisposed(this);
-
-		return this;
-	};
-
-	this.setParent = function(p) {
-		parent = p;
-		ui.onParentSet();
-
-		if(parent !== null)
-			parent.onChildAdded(this);
-
-		return this;
-	};
-
-	this.getParent = function() {
-		return parent;
-	};
-
-	this.setValue = function(val) {
-		value = val;
-		ui.onValueSet();
-
-		if(parent !== null)
-			parent.onChildValueSet(this);
-
-		return this;
-	};
-
-	this.getValue = function() {
-		return value;
-	};
-
-	this.setName = function(n) {
-		name = n;
-		ui.onNameSet();
-
-		if(parent !== null)
-			parent.onChildNameSet(this);
-
-		return this;
-	};
-
-	this.getName = function() {
-		return name;
-	};
-
-	this.setIndex = function(i) {
-		index = i;
-	};
-
-	this.getIndex = function() {
-		return index;
-	};
-
-	this.isEmpty = function() {
-		return false;
-	};
-
-	this.onChildValueSet = function() {};
-	this.onChildNameSet = function() {};
-	this.onChildDisposed = function() {};
-	this.onChildAdded = function() {};
-
-	ui.onInit(this);
+	return Object.assign(baseModel, config);
 }
 
-Brick.emptyBrick = {
-	getUI: () => Brick.emptyUI,
-	dispose: () => this,
-	setParent: () => this,
-	getParent: () => this,
-	getValue: () => null,
-	setValue: () => this,
-	getName: () => null,
-	setName: () => this,
-	onChildValueSet: () => {},
-	onChildNameSet: () => {},
-	onChildDisposed: () => {},
-	onChildAdded: () => {},
-	isEmpty: () => true
-};
+class EmptyBrick {
+	constructor(ui) {
+		this._ui = ui;
+		this._model = setupModel();
+	}
 
-Brick.emptyUI = {
-	getModel: () => Brick.emptyBrick,
-	onInit: () => {},
-	onDispose: () => {},
-	onParentSet: () => {},
-	onValueSet: () => {},
-	onNameSet: () => {}	
-};
+	dispose() {}
+	get ui() { return this._ui;	}
+	get model() { return this._model; }
+	set model(model) { this._model = model; }	
+	get parent() { return this; }	
+	set parent(parent) {}	
+	get value() { return null; }
+	set value(value) {}
+	get name() { return null; }
+	set name(name) {}
+	isEmpty() { return true; }
+}
 
-module.exports = Brick;
+class Brick extends EmptyBrick {
+	constructor(ui) { 
+		super(ui);
+
+		this._parent = new EmptyBrick(ui);
+		this._value = null;
+		this._name = null;
+
+		ui.onInit(this);
+	}
+
+	dispose() {	
+		ui.onDispose();
+		this._parent.model.onChildDisposed(this);
+	}
+
+	get parent() {
+		return this._parent;
+	}
+
+	set parent(parent) {
+		this._parent = parent;
+		ui.onParentSet();
+		this._parent.model.onChildAdded(this);
+	}
+
+	get value() {
+		return this._value;
+	}
+
+	set value(value) {
+		this._value = val;
+		ui.onValueSet();
+		this._parent.onChildValueSet(this);
+	}
+
+	get name() { 
+		return this._name;
+	}
+
+	set name(name) {
+		this._name = name;
+		ui.onNameSet();
+		this._parent.onChildNameSet(this);
+	}
+
+	isEmpty() {
+		return false; 
+	}
+}
+
+module.exports = {
+	EmptyBrick,
+	Brick,
+	//BrickUI,
+	setupModel
+};

@@ -1,20 +1,16 @@
-let Brick = require('./brick-api');
-let BrickUI = require('./base-brick-ui');
-let Wall = require('./wall-api');
-let WallUI = require('./base-wall-ui');
+let Brick = require('./brick-api').Brick;
+let BrickUI = require('./brick-ui').BrickUI;
 
-let brickDecorators = {
+let brickConfigurators = {
+	'wall': require('./bricks-wall'),
 	'literal': require('./bricks-literal'),
 	'function': require('./bricks-function')
 };
 
 module.exports = {
-	getWall: function() {
-		return new Wall(new WallUI());
-	},
-	getBrick: function(config, parentBrick) {
+	setup: function(config, parentBrick) {
 		if(config === undefined)
-			return Brick.emptyBrick;
+			return BrickUI.emptyBrick;
 
 		let newBrick = new Brick(new BrickUI());
 

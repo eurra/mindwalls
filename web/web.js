@@ -1,9 +1,9 @@
 $(function() {
-	let prog2 = require('../core/prog2');
+	let mindwalls = require('../core/mindwalls');
 
-	let exampleWalls = [
+	let examples = [
 		{
-			mainBrick: {
+			type: 'wall', params: [{
 				type: 'function', id: '<', params: [
 					{ type: 'literal', value: 45 },
 					{
@@ -13,10 +13,10 @@ $(function() {
 						]
 					}
 				]	
-			}
+			}]
 		},
 		{			
-			mainBrick: {
+			type: 'wall', params: [{
 				type: 'function', id: '+',
 				params: [
 					{
@@ -28,10 +28,10 @@ $(function() {
 					},
 					{ type: 'literal', value: 12 }
 				]
-			}
+			}]
 		},
 		{
-			mainBrick: {
+			type: 'wall', params: [{
 				type: 'function', id: '<',
 				params: [
 					{
@@ -54,10 +54,10 @@ $(function() {
 					},
 					{ type: 'literal', value: 34 }
 				]
-			}
+			}]
 		}
 	];
 
-	let finalWalls = prog2.import.from(exampleWalls);
-	prog2.generalUI.addWalls(finalWalls);
+	let finalBricks = mindwalls.import.from(examples);
+	mindwalls.generalUI.import(finalBricks);
 });
