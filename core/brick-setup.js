@@ -1,5 +1,5 @@
-let Brick = require('./brick-api').Brick;
-let BrickUI = require('./brick-ui').BrickUI;
+let Brick = require('./brick-api');
+let BrickUI = require('./brick-ui-api');
 
 let brickConfigurators = {
 	'wall': require('./bricks-wall'),
@@ -10,31 +10,53 @@ let brickConfigurators = {
 module.exports = {
 	setup: function(config, parentBrick) {
 		if(config === undefined)
-			return BrickUI.emptyBrick;
+			return Brick.empty;
 
-		let newBrick = new Brick(new BrickUI());
+		let brickEventBuilder = Brick.eventHandlerBuilder();
+		let brickUIEventBuilder = BrickUI.eventHandlerBuilder();
 
-		if(brickDecorators[config.type]) {
-			if(brickDecorators[config.type].ui)
-				brickDecorators[config.type].ui(newBrick.getUI(), config);
+		let configurator = brickConfigurators[config.type]
 
-			if(brickDecorators[config.type].model)
-				brickDecorators[config.type].model(newBrick, config);
+		if(configurator) {
+			if(configurator.model && configurator.model.events)
+				configurator.model.events(brickEventBuilder.addHandler);
+
+			if(configurator.ui && configurator.ui.events)
+				configurator.ui.events(brickUIEventBuilder.addHandler);
+		}
+
+		let brick = null;
+		let brickUI = new BrickUI(
+			() => brick,
+			brickUIEventBuilder.build()
+		);
+
+		brick = new Brick(
+			brickUI,
+			brickEventBuilder.build()
+		);
+		
+		if(configurator) {
+			if(configurator.model && configurator.model.setup)
+				configurator.model.setup(brick);
+
+			if(configurator.ui && configurator.ui.setup)
+				configurator.ui.setup(brickUI);
 		}
 
 		if(parentBrick !== null)
-			newBrick.setParent(parentBrick);
+			brick.parent = parentBrick;
 		else
-			newBrick.setParent(BrickUI.emptyBrick);
+			brick.setParent(Brick.empty);
 
 		if(config.name)
-			newBrick.setName(config.name);
+			brick.name = config.name;
 		else
-			newBrick.setName(null);
+			brick.name = null;
 
 		if(config.value)		
-			newBrick.setValue(config.value);
+			brick.value = config.value;
 
-		return newBrick;
+		return brick;
 	}
 };
