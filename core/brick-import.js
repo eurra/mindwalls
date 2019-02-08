@@ -1,7 +1,7 @@
-let Wall = require('./wall-api');
+let Brick = require('./brick-api');
 let brickSetup = require('./brick-setup');
 
-function importBricks(brickConfig, parent) {
+function importBricks(brickConfig, parent = null) {
 	let newBrick = brickSetup.getBrick(brickConfig, parent);
 
 	if(brickConfig.params && brickConfig.params.length > 0) {
@@ -17,15 +17,8 @@ function importWalls(wallsData) {
 	let walls = [];
 
 	for(let i in wallsData) {
-		let wallData = wallsData[i];		
-		let wall = Wall.emptyWall;
-
-		if(wallData.mainBrick) {
-			wall = brickSetup.getWall().setMainBrick(
-				importBricks(wallData.mainBrick, null)
-			);
-		}
-
+		let wallConfig = wallsData[i];		
+		let wall = importBricks(wallConfig);
 		walls.push(wall);
 	}
 

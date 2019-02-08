@@ -1,14 +1,14 @@
-let Wall = require('./wall-api');
+/*let Wall = require('./wall-api');
 let WallUI = require('./base-wall-ui');
 let BrickUI = require('./base-brick-ui');
 let actions = require('./action-handling');
 
 let activeWall = Wall.emptyWall;
-let activeBricksMap = new Map();
+let activeBricksMap = new Map();*/
 
 /*********** Wall and brick activation ***********/
 
-function highlightBrick(brick) {
+/*function highlightBrick(brick) {
 	$('.activeBrick').removeClass('activeBrick');
 	brick.getUI().getFocusElem().addClass('activeBrick');
 }
@@ -32,11 +32,11 @@ function highlightWall(wall) {
 function changeActiveWall(wall) {
 	if(wall.getUI().getContainer().length > 0)	
 		activeWall = wall;
-}
+}*/
 
 /*********** Wall traverse ***********/
 
-function getNextWallOf(wall) {
+/*function getNextWallOf(wall) {
 	return WallUI.from(wall.getUI().getContainer().next());
 }
 
@@ -76,11 +76,11 @@ function getBottomWallOf(wall) {
 	});
 
 	return WallUI.from(target);
-}
+}*/
 
 /*********** Brick (within wall) traverse ***********/
 
-function getParentBrickWithin(wall) {
+/*function getParentBrickWithin(wall) {
 	let activeBrick = getActiveBrickOf(wall);
 
 	if(activeBrick.isEmpty())
@@ -165,11 +165,11 @@ function getNearestOfActiveBrickWithin(wall) {
 		nearestBrick = getParentBrickWithin(wall);
 
 	return nearestBrick;
-}
+}*/
 
 /*********** Actions ***********/
 
-actions.register([
+/*actions.register([
 	{	// Move up between walls
 		ctrlKey: true,
 		key: 38,
@@ -268,20 +268,20 @@ actions.register([
 			toRemoveBrick.dispose();
 		}
 	}
-]);
+]);*/
 
 module.exports = {
 	addWalls: function(walls) {
 		for(let i in walls) {
-			walls[i].getUI().getContainer().appendTo('#mainContainer');
+			walls[i].ui.container.appendTo('#mainContainer');
 
 			if(i == 0) {
-				changeActiveWall(walls[i]);
+				/*changeActiveWall(walls[i]);
 				highlightWall(activeWall);
-				highlightBrick(getActiveBrickOf(activeWall));
+				highlightBrick(getActiveBrickOf(activeWall));*/
 			}
 		}
-	},
+	}/*,
 	getActiveWall: function() {
 		return activeWall;
 	},
@@ -324,5 +324,5 @@ module.exports = {
 			});
 
 		inputDialog.dialog('open');
-	}
+	}*/
 };

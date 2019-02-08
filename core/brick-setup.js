@@ -8,46 +8,40 @@ let brickConfigurators = {
 };
 
 module.exports = {
-	setup: function(config, parentBrick) {
+	getBrick: function(config, parentBrick) {
 		if(config === undefined)
 			return Brick.empty;
 
-		let brickEventBuilder = Brick.eventHandlerBuilder();
-		let brickUIEventBuilder = BrickUI.eventHandlerBuilder();
-
-		let configurator = brickConfigurators[config.type]
+		let brickEventsBuilder = Brick.eventsBuilder();
+		BrickUI.setDefaultEvents(brickEventsBuilder.addHandler);
+		let brickSetupHandlers = [];
+		let configurator = brickConfigurators[config.type];
 
 		if(configurator) {
-			if(configurator.model && configurator.model.events)
-				configurator.model.events(brickEventBuilder.addHandler);
+			setupHandler = {
+				addSetup: function(setup) {
+					brickSetupHandlers.push(setup);
+				},
+				addEvent: brickEventsBuilder.addHandler
+			}
 
-			if(configurator.ui && configurator.ui.events)
-				configurator.ui.events(brickUIEventBuilder.addHandler);
+			configurator(setupHandler, config);
 		}
 
-		let brick = null;
-		let brickUI = new BrickUI(
-			() => brick,
-			brickUIEventBuilder.build()
-		);
+		let brickUI = new BrickUI();
 
-		brick = new Brick(
+		let brick = new Brick(
 			brickUI,
-			brickEventBuilder.build()
+			brickEventsBuilder.build()
 		);
-		
-		if(configurator) {
-			if(configurator.model && configurator.model.setup)
-				configurator.model.setup(brick);
 
-			if(configurator.ui && configurator.ui.setup)
-				configurator.ui.setup(brickUI);
-		}
+		for(let i in brickSetupHandlers)
+			brickSetupHandlers[i](brick);
 
 		if(parentBrick !== null)
 			brick.parent = parentBrick;
 		else
-			brick.setParent(Brick.empty);
+			brick.parent = Brick.empty();
 
 		if(config.name)
 			brick.name = config.name;

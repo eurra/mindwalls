@@ -34,10 +34,6 @@ body {
 	text-align: center;	
 }
 
-.wall:empty {
-	content: "<span>(empty)</span>";
-}
-
 .brick {
 	display: flex;
 	flex-direction: column;
@@ -94,13 +90,13 @@ body {
 }
 
 .horizontal {
-	display: flex !important;
+	display: flex;
 	justify-content: center;
 	align-content: center;
 }
 
 .vertical {
-	display: flex !important;
+	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-content: center;

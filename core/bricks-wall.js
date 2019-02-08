@@ -1,43 +1,27 @@
 let Brick = require('./brick-api');
 
-function Wall(ui) {
-	let mainBrick = Brick.emptyBrick;
+module.exports = function(setupHandler, config) {
+	let mainBrick = Brick.empty();
 
-	this.getUI = function() {
-		return ui;
-	};
+	setupHandler.addSetup(function(brick) {
+		console.log(brick.ui.valueContainer);
 
-	this.dispose = function() {
-		ui.onDispose();
-		return this;
-	};
+		brick.ui.container.addClass('wall');
+		brick.ui.valueContainer.css('display', 'none');
 
-	this.setMainBrick = function(brick) {
-		mainBrick = brick;
-		ui.onMainBrickSet();
+		let emptySpan = $('<span>(empty)</span>');
 
-		return this;
-	};
+		brick.ui.childrenContainer.
+			append(emptySpan).
+			on('DOMSubtreeModified', function() {
+				if($(this).children('div').length === 0)
+					emptySpan.show();
+				else
+					emptySpan.hide();
+			});
+	});
 
-	this.getMainBrick = function() {
-		return mainBrick;
-	};
-
-	ui.onInit(this);
-}
-
-Wall.emptyWall = {
-	getUI: () => Wall.emptyUI,
-	dispose: () => {},
-	setMainBrick: () => this,
-	getMainBrick: () => Brick.emptyBrick
+	setupHandler.addEvent('childAdded', function(brick, childBrick) {
+		mainBrick = childBrick;
+	});
 };
-
-Wall.emptyUI = {
-	getModel: () => Wall.emptyWall,
-	onInit: () => {},
-	onDispose: () => {},
-	onMainBrickSet: () => this
-};
-
-module.exports = Wall;

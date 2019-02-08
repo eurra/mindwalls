@@ -1,4 +1,4 @@
-let actions = require('./action-handling');
+/*let actions = require('./action-handling');
 let generalUI = require('./general-ui');
 
 actions.register([
@@ -23,26 +23,38 @@ actions.register([
 			}
 		}
 	}
-]);
+]);*/
 
-module.exports = {
-	ui: function(brickUI, config) {
-		let valueContainer = $('<div class="brick data"></div>');
-		brickUI.getContentContainer().append(valueContainer);
-		brickUI.getValueLabel().css('display', 'none');
-		brickUI.setFocusElem(valueContainer);
+module.exports = function(setupHandler, config) {
+	let valueContainer = $('<div class="brick data"></div>');
 
-		let origHandler = brickUI.onValueSet;
+	setupHandler.addSetup(function(brick) {
+		brick.ui.contentContainer.append(valueContainer);
+		brick.ui.valueLabel.css('display', 'none');
+		brick.ui.focusElem = valueContainer;
+		brick.ui.container.data('brick-type', 'literal');
+	});
 
-		brickUI.onValueSet = function() {
-			origHandler();
-
-			let val = brickUI.getModel().getValue();
-			valueContainer.html(val === null ? '?': val);
-
-			return brickUI;
-		};
-
-		brickUI.getContainer().data('brick-type', 'literal');
-	}
+	setupHandler.addEvent('valueSet', function(brick) {
+		let val = brick.value;
+		valueContainer.html(val === null ? '?': val);
+	});
 };
+
+/*module.exports = {
+	ui: {
+		setup: function(brickUI, config) {
+			let valueContainer = $('<div class="brick data"></div>');
+			brickUI.contentContainer.append(valueContainer);
+			brickUI.valueLabel.css('display', 'none');
+			brickUI.focusElem = valueContainer;
+			brickUI.container.data('brick-type', 'literal');
+		},
+		events: function(eventHandler) {
+			eventHandler('valueSet', function(brick, ui) {
+				let val = brick.value;
+				ui.valueContainer.html(val === null ? '?': val);
+			});
+		}
+	}
+};*/

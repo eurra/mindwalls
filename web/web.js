@@ -55,9 +55,12 @@ $(function() {
 					{ type: 'literal', value: 34 }
 				]
 			}]
+		},
+		{ 
+			type: 'wall' 
 		}
 	];
 
 	let finalBricks = mindwalls.import.from(examples);
-	mindwalls.generalUI.import(finalBricks);
+	mindwalls.generalUI.addWalls(finalBricks);
 });

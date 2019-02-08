@@ -1,5 +1,3 @@
-//let actions = require('./action-handling');
-//let generalUI = require('./general-ui');
 let functions = require('./function-register');
 
 function updateFunction(brick, data, def) {
@@ -9,8 +7,8 @@ function updateFunction(brick, data, def) {
 		let finalVals = [];
 
 		for(let i = 0; i < data.childs.length; i++) {
-			if(data.childs[i].getValue())
-				finalVals.push(data.childs[i].getValue());
+			if(data.childs[i].value)
+				finalVals.push(data.childs[i].value);
 		}
 
 		if(
@@ -24,88 +22,73 @@ function updateFunction(brick, data, def) {
 		let finalVals = {};
 
 		data.childs.forEach(function(childBrick) {
-			if(childBrick.getValue())
-				finalVals[childBrick.getName()] = childBrick.getValue();
+			if(childBrick.value)
+				finalVals[childBrick.name] = childBrick.value;
 		});
 
 		if(Object.keys(data.childs).length == Object.keys(def.paramSet.args).length)	
 			finalValue = def.paramSet.resolver(finalVals);
 	}
 	
-	brick.setValue(finalValue);
+	brick.value = finalValue;
 }
 
-module.exports = {
-	model: function(brick, config) {
-		let def = functions.getDefinition(config.id, config.namespace);
-		let data = {};
+module.exports = function(setupHandler, config) {
+	let def = functions.getDefinition(config.id, config.namespace);
+	let data = {};
 
-		if(def.paramSet.type === 'array') {	
-			data.childs = [];
-			//data.childPos = new Map();
+	if(def.paramSet.type === 'array') {	
+		data.childs = [];
 
-			brick.onChildAdded = function(childBrick) {
-				data.childs.push(childBrick);
-				//data.childPos.set(childBrick, data.childs.length - 1);
-				brick.onChildValueSet(childBrick);
-			};
+		setupHandler.addEvent('childAdded', function(brick, childBrick) {
+			data.childs.push(childBrick);
+			brick.events.childValueSet(brick, childBrick);
+		});
 
-			brick.onChildValueSet = function(childBrick) {
-				//let childVal = childBrick.getValue();
-				/*let childIndex = childBrick.getIndex();
-				childsVals[childIndex] = childVal;
+		setupHandler.addEvent('childValueSet', function(brick, childBrick) {
+			updateFunction(brick, data, def);
+		});
 
-				if(childVal === null)
-					unsetVals[childIndex] = 1;
-				else
-					delete unsetVals[childIndex];*/
+		setupHandler.addEvent('childDisposed', function(brick, childBrick) {
+			let found = false;
 
-				updateFunction(brick, data, def);
-			};
-
-			brick.onChildDisposed = function(childBrick) {
-				let found = false;
-
-				for(let i = 0; i < data.childs.length && !found; i++) {
-					if(data.childs[i] === childBrick) {
-						data.childs.splice(i, 1);
-						found = true;
-					}
+			for(let i = 0; i < data.childs.length && !found; i++) {
+				if(data.childs[i] === childBrick) {
+					data.childs.splice(i, 1);
+					found = true;
 				}
+			}
 
-				updateFunction(brick, data, def);
-			};
-		}
-		else if(def.paramSet.type === 'map') {
-			data.childs = new Set();
+			updateFunction(brick, data, def);
+		});
+	}
+	else if(def.paramSet.type === 'map') {
+		data.childs = new Set();
 
-			brick.onChildAdded = function(childBrick) {
-				data.childs.add(childBrick);
-				//data.childPos.set(childBrick, data.childs.length - 1);
-				brick.onChildValueSet(childBrick);
-			};
+		setupHandler.addEvent('childAdded', function(brick, childBrick) {
+			data.childs.add(childBrick);
+			brick.events.childValueSet(brick, childBrick);
+		});
 
-			brick.onChildValueSet = function(childBrick) {
-				/*let childVal = childBrick.getValue();					
+		setupHandler.addEvent('childValueSet', function(brick, childBrick) {
+			updateFunction(brick, data, def);
+		});
 
-				if(childVal === null)
-					delete childsVals[childBrick.getName()];
-				else if(def.paramSet.args[childBrick.getName()])
-					childsVals[childBrick.getName()] = childVal;*/
+		setupHandler.addEvent('childDisposed', function(brick, childBrick) {
+			// ?? 
+		});
+	}
+	else {
+		throw new Error('Function type not supported: ' + def.paramSet.type);
+	}		
 
-				updateFunction(brick, data, def);
-			};
-		}
-		else {
-			throw new Error('Function type not supported: ' + def.paramSet.type);
-		}		
-	},
-	ui: function(brickUI, config) {
+	setupHandler.addSetup(function(brick) {
 		let content = $(`<div class="brick funcName">${config.id}</div>`);
-		brickUI.getContentContainer().append(content);
-		brickUI.setFocusElem(content);
 
-		brickUI.getChildrenContainer().
+		brick.ui.contentContainer.append(content);
+		brick.ui.focusElem = content;
+
+		brick.ui.childrenContainer.
 			addClass('noChilds').
 			on('DOMSubtreeModified', function() {
 				if($(this).children().length === 0)
@@ -113,7 +96,5 @@ module.exports = {
 				else
 					$(this).removeClass('noChilds');
 			});
-
-		return brickUI;
-	}
+	});
 };

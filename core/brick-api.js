@@ -27,30 +27,23 @@ class EmptyBrick {
 
 class Brick extends EmptyBrick {
 	static empty() {
-		let emptyBrick = null;
-		let emptyBrickUI = BrickUI.empty(() => emptyBrick);
+		let emptyBrickUI = BrickUI.empty();
 
 		let emptyBrick = new EmptyBrick(
 			emptyBrickUI,
-			eventHandler.builder([
-					'childValueSet',
-					'childNameSet',
-					'childDisposed',
-					'childAdded'
-				]).
-				build()
+			Brick.eventsBuilder().build()
 		);
 
-		emptyBrickUI.init();
+		emptyBrickUI.init(emptyBrick);
 		return emptyBrick;
 	}
 
-	static eventHandlerBuilder() {
+	static eventsBuilder() {
 		return eventHandler.builder([
-			'childValueSet',
-			'childNameSet',
-			'childDisposed',
-			'childAdded'
+			'valueSet', 'childValueSet',
+			'nameSet', 'childNameSet',					
+			'parentSet', 'childAdded',
+			'disposed', 'childDisposed'
 		]);
 	}
 
@@ -63,8 +56,8 @@ class Brick extends EmptyBrick {
 	}
 
 	dispose() {	
-		this.ui.events.dispose();
-		this._parent.events.childDisposed(this);
+		this.events.disposed(this);
+		this._parent.events.childDisposed(this._parent, this);
 	}
 
 	get parent() {
@@ -74,8 +67,8 @@ class Brick extends EmptyBrick {
 	set parent(parent) {
 		this._parent = parent;
 
-		this.ui.events.parentSet();
-		this._parent.events.childAdded(this);
+		this.events.parentSet(this);
+		this._parent.events.childAdded(this._parent, this);
 	}
 
 	get value() {
@@ -83,10 +76,10 @@ class Brick extends EmptyBrick {
 	}
 
 	set value(value) {
-		this._value = val;
+		this._value = value;
 
-		this.ui.events.valueSet();
-		this._parent.events.childValueSet(this);
+		this.events.valueSet(this);
+		this._parent.events.childValueSet(this._parent, this);
 	}
 
 	get name() { 
@@ -96,8 +89,8 @@ class Brick extends EmptyBrick {
 	set name(name) {
 		this._name = name;
 
-		this.ui.events.nameSet();
-		this._parent.events.childNameSet(this);
+		this.events.nameSet(this);
+		this._parent.events.childNameSet(this._parent, this);
 	}
 
 	isEmpty() {
