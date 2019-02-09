@@ -2,9 +2,10 @@ let BrickUI = require('./brick-ui-api');
 let eventHandler = require('./event-handler');
 
 class EmptyBrick {
-	constructor(ui, events) {
+	constructor(ui, events, api) {
 		this._ui = ui;
 		this._events = events;
+		this._api = api;
 	}
 
 	get ui() { 
@@ -15,6 +16,10 @@ class EmptyBrick {
 		return this._events;
 	}
 
+	get api() {
+		return this._api;
+	}
+
 	dispose() {}		
 	get parent() { return this; }	
 	set parent(parent) {}	
@@ -22,7 +27,6 @@ class EmptyBrick {
 	set value(value) {}
 	get name() { return null; }
 	set name(name) {}
-	isEmpty() { return true; }
 }
 
 class Brick extends EmptyBrick {
@@ -31,7 +35,12 @@ class Brick extends EmptyBrick {
 
 		let emptyBrick = new EmptyBrick(
 			emptyBrickUI,
-			Brick.eventsBuilder().build()
+			Brick.eventsBuilder().build(),
+			{
+				type: function() {
+					return 'empty';
+				}
+			}
 		);
 
 		emptyBrickUI.init(emptyBrick);
@@ -47,8 +56,8 @@ class Brick extends EmptyBrick {
 		]);
 	}
 
-	constructor(ui, events) {
-		super(ui, events);
+	constructor(ui, events, api) {
+		super(ui, events, api);
 
 		this._parent = Brick.empty;
 		this._value = null;
@@ -91,10 +100,6 @@ class Brick extends EmptyBrick {
 
 		this.events.nameSet(this);
 		this._parent.events.childNameSet(this._parent, this);
-	}
-
-	isEmpty() {
-		return false; 
 	}
 }
 

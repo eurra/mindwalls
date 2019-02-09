@@ -1,33 +1,24 @@
 let functions = require('./function-register');
+let Brick = require('./brick-api');
 
-function updateFunction(brick, data, def) {
+function updateFunction(brick) {
 	let finalValue = null;
 
-	if(def.paramSet.type === 'array') {
-		let finalVals = [];
-
-		for(let i = 0; i < data.childs.length; i++) {
-			if(data.childs[i].value)
-				finalVals.push(data.childs[i].value);
-		}
+	if(brick.api.paramsType() === 'array') {
+		let finalVals = brick.api.validValues();
 
 		if(
-			(def.paramSet.cardinality === 'multiple' &&	(!def.paramSet.minRequired || finalVals.length >= def.paramSet.minRequired)) ||
-			(def.paramSet.cardinality && finalVals.length == def.paramSet.cardinality)
+			(brick.api.cardinality() === 'multiple' &&	(!brick.api.minRequired() || finalVals.length >= brick.api.minRequired())) ||
+			(brick.api.cardinality() && finalVals.length == brick.api.cardinality())
 		) {
-			finalValue = def.paramSet.resolver(finalVals);
+			finalValue = brick.api.resolver(finalVals);
 		}
 	}
-	else if(def.paramSet.type === 'map') {
-		let finalVals = {};
+	else if(brick.api.paramsType() === 'map') {
+		let finalVals = brick.api.validValuesAsMap();
 
-		data.childs.forEach(function(childBrick) {
-			if(childBrick.value)
-				finalVals[childBrick.name] = childBrick.value;
-		});
-
-		if(Object.keys(data.childs).length == Object.keys(def.paramSet.args).length)	
-			finalValue = def.paramSet.resolver(finalVals);
+		if(Object.keys(finalVals).length == Object.keys(brick.api.args()).length)	
+			finalValue = brick.api.resolver(finalVals);
 	}
 	
 	brick.value = finalValue;
@@ -35,52 +26,140 @@ function updateFunction(brick, data, def) {
 
 module.exports = function(setupHandler, config) {
 	let def = functions.getDefinition(config.id, config.namespace);
-	let data = {};
+	let childsArr = [];
 
-	if(def.paramSet.type === 'array') {	
-		data.childs = [];
+	setupHandler.addEvent('childAdded', function(brick, childBrick) {
+		childsArr.push(childBrick);
+	});
 
-		setupHandler.addEvent('childAdded', function(brick, childBrick) {
-			data.childs.push(childBrick);
-			brick.events.childValueSet(brick, childBrick);
-		});
+	setupHandler.addEvent('childDisposed', function(brick, childBrick) {
+		let found = false;
 
-		setupHandler.addEvent('childValueSet', function(brick, childBrick) {
-			updateFunction(brick, data, def);
-		});
-
-		setupHandler.addEvent('childDisposed', function(brick, childBrick) {
-			let found = false;
-
-			for(let i = 0; i < data.childs.length && !found; i++) {
-				if(data.childs[i] === childBrick) {
-					data.childs.splice(i, 1);
-					found = true;
-				}
+		for(let i = 0; i < childsArr.length && !found; i++) {
+			if(childsArr[i] === childBrick) {
+				childsArr.splice(i, 1);
+				found = true;
 			}
+		}
+	});
 
-			updateFunction(brick, data, def);
+	if(def.paramSet.type === 'array') {
+		setupHandler.addAPI({
+			cardinality: function() { return def.paramSet.cardinality; },
+			minRequired: function() { return def.paramSet.minRequired; },
+			validValues: function() {
+				let res = [];
+
+				for(let i = 0; i < childsArr.length; i++) {
+					if(childsArr[i].value)
+						res.push(childsArr[i].value);
+				}
+
+				return res;
+			}
 		});
 	}
 	else if(def.paramSet.type === 'map') {
-		data.childs = new Set();
+		let childsSet = new Set();
 
-		setupHandler.addEvent('childAdded', function(brick, childBrick) {
-			data.childs.add(childBrick);
-			brick.events.childValueSet(brick, childBrick);
+		setupHandler.addAPI({
+			args: function() { return def.paramSet.args; },
+			childsAsSet: function() {
+				return new Set(childsSet);
+			},
+			validValuesAsMap: function() {
+				let res = {};
+
+				childsSet.forEach(function(childBrick) {
+					if(childBrick.value)
+						res[childBrick.name] = childBrick.value;
+				});
+
+				return res;
+			}
 		});
 
-		setupHandler.addEvent('childValueSet', function(brick, childBrick) {
-			updateFunction(brick, data, def);
+		setupHandler.addEvent('childAdded', function(brick, childBrick) {
+			childsSet.add(childBrick);
 		});
 
 		setupHandler.addEvent('childDisposed', function(brick, childBrick) {
-			// ?? 
+			childsSet.delete(childBrick);
 		});
 	}
 	else {
 		throw new Error('Function type not supported: ' + def.paramSet.type);
-	}		
+	}
+
+	setupHandler.addEvent('childAdded', function(brick, childBrick) {
+		brick.events.childValueSet(brick, childBrick);
+	});
+
+	setupHandler.addEvent('childDisposed', function(brick, childBrick) {
+		brick.events.childValueSet(brick, childBrick);
+	});
+
+	setupHandler.addEvent('childValueSet', function(brick, childBrick) {
+		updateFunction(brick);
+	});
+
+	setupHandler.addAPI({
+		childs: function() {
+			return childsArr.slice(0, childsArr.length);
+		},
+		firstChild: function() {
+			if(childsArr.length == 0)
+				return Brick.empty();
+
+			return childsArr[0];
+		},
+		lastChild: function() {
+			if(childsArr.length == 0)
+				return Brick.empty();
+
+			return childsArr[childsArr.length - 1];
+		},
+		nextSiblingOf: function(childBrick) {
+			let index = -1;
+
+			for(let i = 0 ; i < childsArr.length && index == -1; i++) {
+				if(childsArr[i] === childBrick)
+					index = i;
+			}
+
+			if(index == -1 || index == childsArr.length - 1)
+				return Brick.empty();
+
+			return childsArr[index + 1];
+		},
+		prevSiblingOf: function(childBrick) {
+			let index = -1;
+
+			for(let i = 0 ; i < childsArr.length && index == -1; i++) {
+				if(childsArr[i] === childBrick)
+					index = i;
+			}
+
+			if(index == -1 || index == 0)
+				return Brick.empty();
+
+			return childsArr[index - 1];
+		},
+		validValues: function() {
+			let res = [];
+
+			for(let i = 0; i < childsArr.length; i++) {
+				if(childsArr[i].value)
+					res.push(childsArr[i].value);
+			}
+
+			return res;
+		},
+		paramsType: function() { 
+			return def.paramSet.type;
+		},
+		resolver: def.paramSet.resolver
+	});
 
 	setupHandler.addSetup(function(brick) {
 		let content = $(`<div class="brick funcName">${config.id}</div>`);

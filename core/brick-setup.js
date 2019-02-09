@@ -14,26 +14,39 @@ module.exports = {
 
 		let brickEventsBuilder = Brick.eventsBuilder();
 		BrickUI.setDefaultEvents(brickEventsBuilder.addHandler);
-		let brickSetupHandlers = [];
-		let configurator = brickConfigurators[config.type];
 
-		if(configurator) {
+		let brickSetupHandlers = [];
+		let customAPI = {};
+
+		if(config.type && brickConfigurators[config.type]) {
 			setupHandler = {
 				addSetup: function(setup) {
 					brickSetupHandlers.push(setup);
 				},
-				addEvent: brickEventsBuilder.addHandler
+				addEvent: brickEventsBuilder.addHandler,
+				addAPI: function(api) {
+					customAPI = Object.assign(customAPI, api);
+				}
 			}
 
-			configurator(setupHandler, config);
+			brickConfigurators[config.type](setupHandler, config);
+
+			customAPI = Object.assign(customAPI, {
+				brickType: function() {
+					return config.type ? config.type : 'nonset';
+				}
+			});
 		}
 
 		let brickUI = new BrickUI();
 
 		let brick = new Brick(
 			brickUI,
-			brickEventsBuilder.build()
+			brickEventsBuilder.build(),
+			customAPI
 		);
+
+		brickUI.init(brick);
 
 		for(let i in brickSetupHandlers)
 			brickSetupHandlers[i](brick);

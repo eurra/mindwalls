@@ -40,21 +40,3 @@ module.exports = function(setupHandler, config) {
 		valueContainer.html(val === null ? '?': val);
 	});
 };
-
-/*module.exports = {
-	ui: {
-		setup: function(brickUI, config) {
-			let valueContainer = $('<div class="brick data"></div>');
-			brickUI.contentContainer.append(valueContainer);
-			brickUI.valueLabel.css('display', 'none');
-			brickUI.focusElem = valueContainer;
-			brickUI.container.data('brick-type', 'literal');
-		},
-		events: function(eventHandler) {
-			eventHandler('valueSet', function(brick, ui) {
-				let val = brick.value;
-				ui.valueContainer.html(val === null ? '?': val);
-			});
-		}
-	}
-};*/

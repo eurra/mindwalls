@@ -67,9 +67,12 @@ module.exports = {
 		paramSet: {
 			type: 'map',
 			args: { 
-				of: 'Number for which the floor will be calculated'
+				of: { 
+					desc: 'Number for which the floor will be calculated',
+					required: true
+				}
 			},
-			resolver: function(args) {
+			resolver: function(args) {				
 				return Math.floor(args.of);
 			}
 		}	

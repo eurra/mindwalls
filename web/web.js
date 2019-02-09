@@ -43,8 +43,8 @@ $(function() {
 									{
 										type: 'function', id: '+',
 										params: [
-											//{ type: 'literal', value: 3 },
-											//{ type: 'literal', value: 50 }
+											{ type: 'literal', value: 3 },
+											{ type: 'literal', value: 50 }
 										]
 									},
 									{ type: 'literal', value: 2.7 }

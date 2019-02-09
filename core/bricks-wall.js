@@ -4,8 +4,6 @@ module.exports = function(setupHandler, config) {
 	let mainBrick = Brick.empty();
 
 	setupHandler.addSetup(function(brick) {
-		console.log(brick.ui.valueContainer);
-
 		brick.ui.container.addClass('wall');
 		brick.ui.valueContainer.css('display', 'none');
 
@@ -23,5 +21,9 @@ module.exports = function(setupHandler, config) {
 
 	setupHandler.addEvent('childAdded', function(brick, childBrick) {
 		mainBrick = childBrick;
+	});
+
+	setupHandler.addEvent('childValueSet', function(brick, childBrick) {
+		brick.value = childBrick.value;
 	});
 };
