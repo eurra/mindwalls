@@ -25,7 +25,7 @@ actions.register([
 	}
 ]);*/
 
-module.exports = function(setupHandler, config) {
+module.exports = function(setupHandler, config) {	
 	let valueContainer = $('<div class="brick data"></div>');
 
 	setupHandler.addSetup(function(brick) {

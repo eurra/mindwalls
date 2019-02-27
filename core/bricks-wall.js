@@ -1,5 +1,44 @@
 let Brick = require('./brick-api');
 
+module.exports = function(setup, config) {
+	let mainBrick = setup.emptyBrick();
+	let emptySpan = $('<span>(empty)</span>');
+
+	setup.configure(function(brick) {
+		brick.view.getContainer().addClass('wall');
+		brick.view.getValueContainer().css('display', 'none');
+
+		brick.view.getChildrenContainer().
+			append(emptySpan).
+			on('DOMSubtreeModified', function() {
+				if($(this).children('div').length === 0)
+					emptySpan.show();
+				else
+					emptySpan.hide();
+			});
+	});
+
+	setup.on('childAdded', function(brick, childBrick) {
+		mainBrick = childBrick;
+	});
+
+	setup.extend(function(brick){
+		return {
+			model: {
+				getMainBrick: function() {
+					return mainBrick;
+				}
+			},
+			view: {
+				getEmptySpan: function() {
+					return emptySpan;
+				}
+			}
+		};
+	});
+};
+
+
 module.exports = function(setupHandler, config) {
 	let mainBrick = Brick.empty();
 
