@@ -7,19 +7,61 @@ let brickConfigurators = {
 	'function': require('./bricks-function')
 };
 
+let brickModules = {
+};
+
+let brickAssemblings = {
+	base: {
+		uses: [
+			'core.model.base',
+			'core.view.jq.base'
+		]
+	},
+	meta: {
+		extend: 'base',
+		uses: []
+	},
+	generic: {
+		extend: 'base',
+		uses: [
+			'core.view.jq.generic'
+		]
+	}
+};
+
 module.exports = {
 	getBrick: function(config, parentBrick) {
 		if(config === undefined)
-			return Brick.empty;
+			throw new Error('No config data was provided');
 
 		let brickEventsBuilder = Brick.eventsBuilder();
 		BrickUI.setDefaultEvents(brickEventsBuilder.addHandler);
 
-		let brickSetupHandlers = [];
-		let customAPI = {};
+		let configHandlers = [];
+		let extendHandlers = [];
+
+		let setup = {
+			registerEvents: function(events) {
+
+			},
+			on: function(eventName, eventHandler) {
+				brickEventsBuilder.addHandler(eventName, eventHandler);
+			},
+			configure: function(configHandler) {
+				configHandlers.push(configHandler);
+			},
+			extend: function(extendHandler) {
+				extendHandlers.push(extendHandler);
+			}
+		};
+
+		require('./bricks-model-base')(setup);
+		require('./bricks-jq-base')(setup);
+
+
 
 		if(config.type && brickConfigurators[config.type]) {
-			setupHandler = {
+			let setupHandler = {
 				addSetup: function(setup) {
 					brickSetupHandlers.push(setup);
 				},
