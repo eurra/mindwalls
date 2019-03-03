@@ -12,5 +12,7 @@
   "dependencies": {
     "electron": "^4.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^5.15.0"
+  }
 }
