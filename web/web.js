@@ -61,6 +61,24 @@ $(function() {
 		}
 	];
 
-	let finalBricks = mindwalls.import.from(examples);
-	mindwalls.generalUI.addWalls(finalBricks);
+	//let finalBricks = mindwalls.import.from(examples);
+	//mindwalls.generalUI.addWalls(finalBricks);
+
+	let bricks = mindwalls.import.from([
+		{
+			type: 'generic', childs: [{
+				type: 'generic', childs: [
+					{ type: 'generic', value: 45 },
+					{
+						type: 'generic', childs: [
+							{ type: 'generic', value: 133 },
+							{ type: 'generic', value: 50 }							
+						]
+					}
+				]	
+			}]
+		}
+	]);
+
+	console.log(bricks);
 });

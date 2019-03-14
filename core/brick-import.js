@@ -1,12 +1,11 @@
-let Brick = require('./brick-api');
 let brickSetup = require('./brick-setup');
 
 function importBricks(brickConfig, parent = null) {
 	let newBrick = brickSetup.getBrick(brickConfig, parent);
 
-	if(brickConfig.params && brickConfig.params.length > 0) {
-		for(let i in brickConfig.params) {
-			importBricks(brickConfig.params[i], newBrick);
+	if(brickConfig.childs && brickConfig.childs.length > 0) {
+		for(let i in brickConfig.childs) {
+			importBricks(brickConfig.childs[i], newBrick);
 		}
 	}
 
@@ -26,5 +25,6 @@ function importWalls(wallsData) {
 }
 
 module.exports = {	
-	from: importWalls	
+	from: importWalls,
+	fromConfig: importBricks
 };

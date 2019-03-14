@@ -1,26 +1,31 @@
 module.exports = {
-	builder: function(triggers) {
+	builder: function() {
+		let eventNames = new Set();
 		let handlers = {};
-		let result = {};
-
-		for(let i in triggers) {
-			let triggerName = triggers[i];
-			handlers[triggerName] = [];
-
-			result[triggerName] = function() {
-				for(let j in handlers[triggerName])
-					handlers[triggerName][j].apply(null, arguments);
-			};
-		}
 
 		return {
-			addHandler: function(triggerName, handler) {
-				if(!handlers[triggerName])
-					throw new Error(`Invalid trigger name: ${triggerName}`);
+			registerEvents: function(events) {
+				for(let i = 0; i < events.length; i++)
+					eventNames.add(events[i]);
+			},
+			addHandler: function(eventName, handler) {
+				if(!handlers[eventName])
+					handlers[eventName] = [];
 
-				handlers[triggerName].push(handler);
+				handlers[eventName].push(handler);
 			},
 			build: function() {
+				let result = {};
+
+				eventNames.forEach(function(elem) {
+					result[elem] = function() {
+						if(handlers[elem]) {
+							for(let j in handlers[elem])
+								handlers[eventNames][j].apply(null, arguments);
+						}							
+					};
+				});
+
 				return result;
 			}
 		};
