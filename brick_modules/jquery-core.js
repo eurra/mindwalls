@@ -31,6 +31,37 @@ module.exports = {
 				append(childrenCont);
 		});
 
+		setup.on('disposed', function(brick) {
+			brick.view.getContainer().remove();
+		});
+
+		setup.on('childAdded', function(brick, childBrick) {			
+			brick.view.getChildrenContainer().append(childBrick.view.getContainer());
+		});
+
+		setup.on('valueSet', function(brick) {
+			let val = brick.model.getValue();		
+			let text;
+
+			if(val === null)
+				text = '?';
+			else if(typeof val === 'number' && !Number.isSafeInteger(val))
+				text = val.toFixed(2);
+			else
+				text = val.toString();
+
+			brick.view.getValueLabel().html(text);
+		});
+
+		setup.on('nameSet', function(brick) {
+			let name = brick.model.getName();
+
+			if(name !== null)
+				brick.view.getNameLabel().html(name).css('display', '');
+			else
+				brick.view.getNameLabel().html('').css('display', 'none');
+		});
+
 		setup.extend(function() {
 			return {
 				view: {

@@ -3,11 +3,11 @@ $(function() {
 
 	let examples = [
 		{
-			type: 'wall', params: [{
-				type: 'function', id: '<', params: [
+			type: 'wall', childs: [{
+				type: 'function', id: '<', childs: [
 					{ type: 'literal', value: 45 },
 					{
-						type: 'function', id: '-', params: [
+						type: 'function', id: '-', childs: [
 							{ type: 'literal', value: 133 },
 							{ type: 'literal', value: 50 }							
 						]
@@ -16,12 +16,12 @@ $(function() {
 			}]
 		},
 		{			
-			type: 'wall', params: [{
+			type: 'wall', childs: [{
 				type: 'function', id: '+',
-				params: [
+				childs: [
 					{
 						type: 'function', id: '-',
-						params: [
+						childs: [
 							{ type: 'literal', value: 3 },
 							{ type: 'literal', value: 5 }							
 						]
@@ -31,18 +31,18 @@ $(function() {
 			}]
 		},
 		{
-			type: 'wall', params: [{
+			type: 'wall', childs: [{
 				type: 'function', id: '<',
-				params: [
+				childs: [
 					{
 						type: 'function', id: 'floor',
-						params: [
+						childs: [
 							{
 								name: 'of', type: 'function', id: '/',
-								params: [
+								childs: [
 									{
 										type: 'function', id: '+',
-										params: [
+										childs: [
 											{ type: 'literal', value: 3 },
 											{ type: 'literal', value: 50 }
 										]
@@ -64,21 +64,8 @@ $(function() {
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);
 
-	let bricks = mindwalls.import.from([
-		{
-			type: 'generic', childs: [{
-				type: 'generic', childs: [
-					{ type: 'generic', value: 45 },
-					{
-						type: 'generic', childs: [
-							{ type: 'generic', value: 133 },
-							{ type: 'generic', value: 50 }							
-						]
-					}
-				]	
-			}]
-		}
-	]);
-
-	console.log(bricks);
+	let meta = mindwalls.import.from([ { type: 'meta' } ])[0];
+	let walls = mindwalls.import.from(examples);
+	meta.model.addWalls(walls);
+	meta.view.getContainer().appendTo('body');
 });

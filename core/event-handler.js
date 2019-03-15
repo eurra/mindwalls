@@ -21,7 +21,7 @@ module.exports = {
 					result[elem] = function() {
 						if(handlers[elem]) {
 							for(let j in handlers[elem])
-								handlers[eventNames][j].apply(null, arguments);
+								handlers[elem][j].apply(null, arguments);
 						}							
 					};
 				});

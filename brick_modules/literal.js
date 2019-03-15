@@ -25,18 +25,19 @@ actions.register([
 	}
 ]);*/
 
-module.exports = function(setupHandler, config) {	
-	let valueContainer = $('<div class="brick data"></div>');
+module.exports = {
+	'core.bricks.literal': function(setup) {	
+		let valueContainer = $('<div class="brick data"></div>');
 
-	setupHandler.addSetup(function(brick) {
-		brick.ui.contentContainer.append(valueContainer);
-		brick.ui.valueLabel.css('display', 'none');
-		brick.ui.focusElem = valueContainer;
-		brick.ui.container.data('brick-type', 'literal');
-	});
+		setup.configure(function(brick) {
+			brick.view.getContent().append(valueContainer);
+			brick.view.getValueLabel().css('display', 'none');
+			brick.view.setFocusElem(valueContainer);
+		});
 
-	setupHandler.addEvent('valueSet', function(brick) {
-		let val = brick.value;
-		valueContainer.html(val === null ? '?': val);
-	});
+		setup.on('valueSet', function(brick) {
+			let val = brick.model.getValue();
+			valueContainer.html(val === null ? '?': val);
+		})
+	}
 };

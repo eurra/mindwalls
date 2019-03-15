@@ -6,7 +6,6 @@ module.exports = {
 		let name = null;
 
 		setup.registerEvents([
-			'init',
 			'valueSet', 'childValueSet',
 			'nameSet', 'childNameSet',					
 			'parentSet', 'childAdded',

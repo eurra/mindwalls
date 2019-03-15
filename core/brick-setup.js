@@ -4,6 +4,10 @@ let brickModules = {
 	'core.model.base': require('../brick_modules/model-base')['core.model.base'],
 	'core.view.jq.base': require('../brick_modules/jquery-core')['core.view.jq.base'],
 	'core.view.jq.generic': require('../brick_modules/jquery-core')['core.view.jq.generic'],
+	'core.bricks.wall': require('../brick_modules/wall')['core.bricks.wall'],
+	'core.bricks.literal': require('../brick_modules/literal')['core.bricks.literal'],
+	'core.bricks.function': require('../brick_modules/function')['core.bricks.function'],
+	'core.bricks.meta': require('../brick_modules/metabrick')['core.bricks.meta'],
 };
 
 let brickTypes = {
@@ -14,25 +18,35 @@ let brickTypes = {
 		]
 	},
 	meta: {
-		use: []
+		use: [ 'core.bricks.meta' ]
 	},
 	generic: {
-		use: [
-			'core.view.jq.generic'
-		]
-	}
+		use: [ 'core.view.jq.generic' ]
+	},
+	wall: {
+		extend: 'generic',
+		use: [ 'core.bricks.wall' ]
+	},
+	literal: {
+		extend: 'generic',
+		use: [ 'core.bricks.literal' ]
+	},
+	function: {
+		extend: 'generic',
+		use: [ 'core.bricks.function' ]
+	},
 };
 
-function loadModule(setup, moduleName) {
+function loadModule(setup, config, moduleName) {
 	if(!brickModules[moduleName])
 		throw new Error(`Invalid brick module: '${moduleName}'`);
 
-	brickModules[moduleName](setup);
+	brickModules[moduleName](setup, config);
 }
 
-function loadType(setup, type, loaded) {
+function loadType(setup, type, config, loaded) {
 	if(loaded.has(type))
-		throw new Error(`Cyclic brick module dependency at type '${type}'`);
+		throw new Error(`Cyclic brick module dependency at type '${config.type}'`);
 
 	if(!brickTypes[type])
 		throw new Error(`Invalid brick type: '${type}'`);
@@ -40,11 +54,11 @@ function loadType(setup, type, loaded) {
 	let typeConfig = brickTypes[type];
 
 	if(typeConfig.extend)
-		loadType(setup, typeConfig.extend, loaded);
+		loadType(setup, typeConfig.extend, config, loaded);
 
 	if(typeConfig.use) {
 		for(let i = 0; i < typeConfig.use.length; i++)
-			loadModule(setup, typeConfig.use[i], loaded);
+			loadModule(setup, config, typeConfig.use[i]);
 	}
 
 	loaded.add(type);
@@ -55,10 +69,8 @@ module.exports = {
 		if(!config)
 			throw new Error('No config data was provided');
 
-		if(!config.type) {
-			console.log(config);
+		if(!config.type)
 			throw new Error(`No type was provided in brick configuration`);
-		}
 
 		let brickEventsBuilder = eventHandler.builder();
 		let extendHandlers = [];
@@ -95,12 +107,12 @@ module.exports = {
 			};
 		});
 
-		loadType(setup, 'base', loaded);
-		loadType(setup, config.type, loaded);
+		loadType(setup, 'base', config, loaded);
+		loadType(setup, config.type, config, loaded);
 
 		// Step 1 - Build and validate events
 		let finalEvents = brickEventsBuilder.build();
-		
+
 		// Step 2 - Create brick instance
 		let brickModel = {};
 		let brickView = {};		

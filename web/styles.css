@@ -17,12 +17,13 @@ body {
     overflow-x: hidden;
 }
 
-#mainContainer {
+.metabrick {
 	display: flex;
 	align-items: center;
 	justify-content: space-around;
 	align-content: center;
 	flex-wrap: wrap;
+	height: 100%;
 }
 
 .wall {
