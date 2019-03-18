@@ -6,6 +6,7 @@ module.exports = {
 		let name = null;
 
 		setup.registerEvents([
+			'childSetModified',
 			'valueSet', 'childValueSet',
 			'nameSet', 'childNameSet',					
 			'parentSet', 'childAdded',
@@ -18,8 +19,10 @@ module.exports = {
 					dispose: function() {
 						brick.events.disposed(brick);
 
-						if(parent != null)
+						if(parent != null) {
 							parent.events.childDisposed(parent, brick);
+							parent.events.childSetModified(parent, brick);
+						}
 					},
 					getParent: function() {
 						return parent;
@@ -28,8 +31,10 @@ module.exports = {
 						parent = p;
 						brick.events.parentSet(brick);
 
-						if(parent != null)
+						if(parent != null) {
 							parent.events.childAdded(parent, brick);
+							parent.events.childSetModified(parent, brick);
+						}
 					},
 					getValue: function() {
 						return value;
@@ -38,8 +43,10 @@ module.exports = {
 						value = v;
 						brick.events.valueSet(brick);
 
-						if(parent != null)
+						if(parent != null) {
 							parent.events.childValueSet(parent, brick);
+							parent.events.childSetModified(parent, brick);
+						}
 					},
 					getName: function() {
 						return name;
@@ -48,8 +55,10 @@ module.exports = {
 						name = n;
 						brick.events.nameSet(brick);
 
-						if(parent != null)
+						if(parent != null) {
 							parent.events.childNameSet(parent, brick);
+							parent.events.childSetModified(parent, brick);
+						}
 					}
 				}
 			};

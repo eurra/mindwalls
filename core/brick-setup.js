@@ -6,6 +6,7 @@ let brickModules = {
 	'core.view.jq.generic': require('../brick_modules/jquery-core')['core.view.jq.generic'],
 	'core.bricks.wall': require('../brick_modules/wall')['core.bricks.wall'],
 	'core.bricks.literal': require('../brick_modules/literal')['core.bricks.literal'],
+	'core.bricks.container': require('../brick_modules/container-brick')['core.bricks.container'],
 	'core.bricks.function': require('../brick_modules/function')['core.bricks.function'],
 	'core.bricks.meta': require('../brick_modules/metabrick')['core.bricks.meta'],
 };
@@ -25,7 +26,7 @@ let brickTypes = {
 	},
 	wall: {
 		extend: 'generic',
-		use: [ 'core.bricks.wall' ]
+		use: [ 'core.bricks.container', 'core.bricks.wall' ]
 	},
 	literal: {
 		extend: 'generic',
@@ -33,7 +34,7 @@ let brickTypes = {
 	},
 	function: {
 		extend: 'generic',
-		use: [ 'core.bricks.function' ]
+		use: [ 'core.bricks.container', 'core.bricks.function' ]
 	},
 };
 
