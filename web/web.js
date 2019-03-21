@@ -67,6 +67,5 @@ $(function() {
 	let meta = mindwalls.import.from([ { type: 'meta' } ])[0];
 	let walls = mindwalls.import.from(examples);
 	meta.model.addWalls(walls);
-	console.log(meta);
 	meta.view.getContainer().appendTo('body');
 });
