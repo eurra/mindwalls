@@ -26,24 +26,23 @@ function findConfig(config) {
 	return locatedConfig;
 }
 
-$('#mainContainer').
-	keydown(function(e) {
-		let config = {
-			shiftKey: e.shiftKey,
-			ctrlKey: e.ctrlKey,
-			altKey: e.altKey,
-			key: e.which
-		};
-
-		let foundConfig = findConfig(config);
-
-		for(let i in foundConfig.handlers)
-			foundConfig.handlers[i](e);
-	}).
-	focus();
-
 module.exports = {
-	targetElem: $('#mainContainer'),
+	setTargetElem: function(elem) {
+		elem.keydown(function(e) {
+			let config = {
+				shiftKey: e.shiftKey,
+				ctrlKey: e.ctrlKey,
+				altKey: e.altKey,
+				key: e.which
+			};
+
+			let foundConfig = findConfig(config);
+
+			for(let i in foundConfig.handlers)
+				foundConfig.handlers[i](e);
+		}).
+		focus();
+	},
 	register: function(toRegister) {
 		for(let i in toRegister) {
 			let entry = toRegister[i];

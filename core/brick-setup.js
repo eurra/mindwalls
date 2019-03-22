@@ -18,23 +18,27 @@ let brickTypes = {
 			'core.view.jq.base'
 		]
 	},
+	container: {
+		use: [ 'core.bricks.container' ]
+	},
 	meta: {
+		extend: [ 'container' ],
 		use: [ 'core.bricks.meta' ]
 	},
 	generic: {
 		use: [ 'core.view.jq.generic' ]
 	},
 	wall: {
-		extend: 'generic',
-		use: [ 'core.bricks.container', 'core.bricks.wall' ]
+		extend: [ 'container', 'generic' ],
+		use: [ 'core.bricks.wall' ]
 	},
 	literal: {
-		extend: 'generic',
+		extend: [ 'generic' ],
 		use: [ 'core.bricks.literal' ]
 	},
 	function: {
-		extend: 'generic',
-		use: [ 'core.bricks.container', 'core.bricks.function' ]
+		extend: [ 'container', 'generic' ],
+		use: [ 'core.bricks.function' ]
 	},
 };
 
@@ -54,8 +58,10 @@ function loadType(setup, type, config, loaded) {
 
 	let typeConfig = brickTypes[type];
 
-	if(typeConfig.extend)
-		loadType(setup, typeConfig.extend, config, loaded);
+	if(typeConfig.extend) {
+		for(let i = 0; i < typeConfig.extend.length; i++)
+			loadType(setup, typeConfig.extend[i], config, loaded);
+	}
 
 	if(typeConfig.use) {
 		for(let i = 0; i < typeConfig.use.length; i++)
@@ -99,6 +105,9 @@ module.exports = {
 				model: {
 					instanceOf: function(type) {
 						return loaded.has(type);
+					},
+					getTypes: function() {
+						return Array.from(loaded);
 					},
 					mustBe: function(type) {
 						if(!brick.model.instanceOf(type))
