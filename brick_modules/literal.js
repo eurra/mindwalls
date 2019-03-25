@@ -1,32 +1,34 @@
-/*let actions = require('./action-handling');
-let generalUI = require('./general-ui');
+let mw = require('../core/mindwalls.js');
 
-actions.register([
+mw.actions.register([
 	{
 		// F2 - set literal value
 		key: 113,
 		action: function() {
-			let activeBrick = generalUI.getActiveBrick();
+			let activeBrick = mw.generalUI.getMeta().model.getActiveBrick();
 
-			if(activeBrick.getUI().getContainer().data('brick-type') === 'literal') {
-				generalUI.showInputDialog({
+			if(activeBrick != null && activeBrick.model.instanceOf('literal')) {
+				mw.generalUI.showInputDialog({
 					title: 'Set literal value...',
 					placeholder: 'Enter a number, a string, etc...',
-					relativeTo: activeBrick.getUI().getContainer(),
+					relativeTo: activeBrick.view.getContainer(),
 					handle: function(textVal) {
 						if(!isNaN(textVal))
 							textVal = Number(textVal);
 
-						activeBrick.setValue(textVal);
+						activeBrick.model.setValue(textVal);
 					}
 				});
 			}
 		}
 	}
-]);*/
+]);
 
 module.exports = {
-	'core.bricks.literal': function(setup) {	
+	id: 'literal',
+	loader: function(setup) {	
+		setup.import(mw.bricks.jqGeneric);
+
 		let valueContainer = $('<div class="brick data"></div>');
 
 		setup.configure(function(brick) {

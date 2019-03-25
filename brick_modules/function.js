@@ -1,4 +1,4 @@
-let functions = require('../core/function-register');
+let mw = require('../core/mindwalls.js');
 
 function updateFunction(brick) {
 	let finalValue = null;
@@ -10,7 +10,7 @@ function updateFunction(brick) {
 			(brick.model.getCardinality() == 'multiple' && (!brick.model.getMinRequired() || finalVals.length >= brick.model.getMinRequired())) ||
 			(brick.model.getCardinality() && finalVals.length == brick.model.getCardinality())
 		) {			
-			finalValue = brick.model.resolver(finalVals);
+			finalValue = brick.model.resolver.apply(null, finalVals);
 		}
 	}
 	else if(brick.model.getParamsType() === 'map') {
@@ -24,8 +24,12 @@ function updateFunction(brick) {
 }
 
 module.exports = {
-	'core.bricks.function': function(setup, config) {
-		let def = functions.getDefinition(config.id, config.namespace);
+	id: 'function',
+	loader: function(setup, config) {
+		setup.import(mw.bricks.nested);
+		setup.import(mw.bricks.jqGeneric);
+
+		let def = mw.functions.getDefinition(config.id, config.namespace);
 
 		if(def.paramSet.type === 'array') {
 			setup.extend(function() {

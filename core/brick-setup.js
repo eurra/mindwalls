@@ -1,6 +1,6 @@
-let eventHandler = require('./event-handler');
+let mw = require('./mindwalls.js');
 
-let brickModules = {
+/*let brickModules = {
 	'core.model.base': require('../brick_modules/model-base')['core.model.base'],
 	'core.view.jq.base': require('../brick_modules/jquery-core')['core.view.jq.base'],
 	'core.view.jq.generic': require('../brick_modules/jquery-core')['core.view.jq.generic'],
@@ -40,16 +40,17 @@ let brickTypes = {
 		extend: [ 'container', 'generic' ],
 		use: [ 'core.bricks.function' ]
 	},
-};
+};*/
 
-function loadModule(setup, config, moduleName) {
-	if(!brickModules[moduleName])
-		throw new Error(`Invalid brick module: '${moduleName}'`);
+function loadModule(brickModule, setup, config, loaded) {
+	if(loaded.has(brickModule.id))
+		throw new Error(`Cyclic brick module dependency at type '${brickModule.id}'`);
 
-	brickModules[moduleName](setup, config);
+	brickModule.loader(setup, config);
+	loaded.add(brickModule.id);
 }
 
-function loadType(setup, type, config, loaded) {
+/*function loadType(setup, type, config, loaded) {
 	if(loaded.has(type))
 		throw new Error(`Cyclic brick module dependency at type '${config.type}'`);
 
@@ -69,21 +70,22 @@ function loadType(setup, type, config, loaded) {
 	}
 
 	loaded.add(type);
-}
+}*/
 
 module.exports = {
-	getBrick: function(config, parentBrick) {
+	getBrick: function(toLoadModule, config, parentBrick = null) {
 		if(!config)
 			throw new Error('No config data was provided');
 
-		if(!config.type)
-			throw new Error(`No type was provided in brick configuration`);
-
-		let brickEventsBuilder = eventHandler.builder();
+		let brickEventsBuilder = mw.events.builder();
 		let extendHandlers = [];
-		let configHandlers = [];		
+		let configHandlers = [];
+		let loaded = new Set();
 
 		let setup = {
+			import: function(brickModule) {
+				loadModule(brickModule, this, config, loaded);
+			},
 			registerEvents: function(events) {
 				brickEventsBuilder.registerEvents(events);
 			},
@@ -97,8 +99,6 @@ module.exports = {
 				configHandlers.push(configHandler);
 			}			
 		};
-
-		let loaded = new Set();
 
 		setup.extend(function(brick) {
 			return {
@@ -117,8 +117,10 @@ module.exports = {
 			};
 		});
 
-		loadType(setup, 'base', config, loaded);
-		loadType(setup, config.type, config, loaded);
+		loadModule(mw.bricks.base, setup, config, loaded);
+		loadModule(toLoadModule, setup, config, loaded);
+		//load(setup, 'base', config, loaded);
+		//loadType(setup, config.type, config, loaded);
 
 		// Step 1 - Build and validate events
 		let finalEvents = brickEventsBuilder.build();

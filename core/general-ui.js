@@ -1,4 +1,4 @@
-let actions = require('./action-handling');
+let mw = require('../core/mindwalls.js');
 let metaBrick = null;
 
 module.exports = {
@@ -6,9 +6,49 @@ module.exports = {
 		meta.model.mustBe('meta');
 		$('body').empty();
 		meta.view.getContainer().appendTo('body');
-		actions.setTargetElem(meta.view.getContainer());
+		mw.actions.setTargetElem(meta.view.getContainer());
 
 		metaBrick = meta;
+	},
+	getMeta: function() {
+		return metaBrick;
+	},
+	showInputDialog: function(config) {
+		let inputDialog = $(`<div title="${config.title}">`).
+			dialog({ 
+				autoOpen: false,
+				modal: true,
+				resizable: false,
+				draggable: false,
+				minHeight: 10,
+				minWidth: 10,
+				close: function() {
+					$(this).remove();
+				}
+			});
+
+		if(config.relativeTo) {
+			inputDialog.dialog('option', 'position', {
+				at: 'right bottom',
+				my: 'left top',
+				of: config.relativeTo
+			});
+		}
+
+		$(`<input style="width: 95%;" type="text" placeholder="${config.placeholder}"/>`).
+			appendTo(inputDialog).
+			keypress(function(e) {
+				if(e.which === 13) {
+					if($(this).val() !== '') {
+						if(config.handle)
+							config.handle($(this).val());
+					}
+
+					inputDialog.dialog('close');
+				}
+			});
+
+		inputDialog.dialog('open');
 	}
 };
 
@@ -22,7 +62,7 @@ function checkIntersect(elem1, elem2) {
 	return Math.max(e1L, e2L) <= Math.max(e1R, e2R);
 }
 
-actions.register([
+mw.actions.register([
 	{	// Move up between walls
 		ctrlKey: true,
 		key: 38,

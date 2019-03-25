@@ -1,6 +1,6 @@
-
 module.exports = {
-	'core.model.base': function(setup) {
+	id: 'model-base',
+	loader: function(setup) {
 		let parent = null;
 		let value = null;
 		let name = null;

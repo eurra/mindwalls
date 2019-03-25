@@ -1,71 +1,71 @@
-$(function() {
-	let mindwalls = require('../core/mindwalls');
+let mw = require('../core/mindwalls');
 
+$(function() {
 	let examples = [
 		{
-			type: 'wall', childs: [{
-				type: 'function', id: '<', childs: [
-					{ type: 'literal', value: 45 },
+			module: mw.bricks.wall, childs: [{
+				module: mw.bricks.function, id: '<', childs: [
+					{ module: mw.bricks.literal, value: 45 },
 					{
-						type: 'function', id: '-', childs: [
-							{ type: 'literal', value: 133 },
-							{ type: 'literal', value: 50 }							
+						module: mw.bricks.function, id: '-', childs: [
+							{ module: mw.bricks.literal, value: 133 },
+							{ module: mw.bricks.literal, value: 50 }							
 						]
 					}
 				]	
 			}]
 		},
 		{			
-			type: 'wall', childs: [{
-				type: 'function', id: '+',
+			module: mw.bricks.wall, childs: [{
+				module: mw.bricks.function, id: '+',
 				childs: [
 					{
-						type: 'function', id: '-',
+						module: mw.bricks.function, id: '-',
 						childs: [
-							{ type: 'literal', value: 3 },
-							{ type: 'literal', value: 5 }							
+							{ module: mw.bricks.literal, value: 3 },
+							{ module: mw.bricks.literal, value: 5 }							
 						]
 					},
-					{ type: 'literal', value: 12 }
+					{ module: mw.bricks.literal, value: 12 }
 				]
 			}]
 		},
 		{
-			type: 'wall', childs: [{
-				type: 'function', id: '<',
+			module: mw.bricks.wall, childs: [{
+				module: mw.bricks.function, id: '<',
 				childs: [
 					{
-						type: 'function', id: 'floor',
+						module: mw.bricks.function, id: 'floor',
 						childs: [
 							{
-								name: 'of', type: 'function', id: '/',
+								name: 'of', module: mw.bricks.function, id: '/',
 								childs: [
 									{
-										type: 'function', id: '+',
+										module: mw.bricks.function, id: '+',
 										childs: [
-											{ type: 'literal', value: 3 },
-											{ type: 'literal', value: 50 }
+											{ module: mw.bricks.literal, value: 3 },
+											{ module: mw.bricks.literal, value: 50 }
 										]
 									},
-									{ type: 'literal', value: 2.7 }
+									{ module: mw.bricks.literal, value: 2.7 }
 								]
 							}									
 						]
 					},
-					{ type: 'literal', value: 34 }
+					{ module: mw.bricks.literal, value: 34 }
 				]
 			}]
 		},
 		{ 
-			type: 'wall' 
+			module: mw.bricks.wall 
 		}
 	];
 
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);
 
-	let meta = mindwalls.import.from([ { type: 'meta' } ])[0];
-	let walls = mindwalls.import.from(examples);
+	let meta = mw.import.from([ { module: mw.bricks.meta } ])[0];
+	let walls = mw.import.from(examples);
 	meta.model.addWalls(walls);	
-	mindwalls.generalUI.setMeta(meta);
+	mw.generalUI.setMeta(meta);
 });

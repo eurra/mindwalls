@@ -1,7 +1,15 @@
-let brickSetup = require('./brick-setup');
+let mw = require('./mindwalls.js');
+
+function extractSimpleConfig(cfg) {
+	let newCfg = Object.assign({}, cfg);
+	delete newCfg.module;
+	delete newCfg.childs;
+
+	return newCfg;
+}
 
 function importBricks(brickConfig, parent = null) {
-	let newBrick = brickSetup.getBrick(brickConfig, parent);
+	let newBrick = mw.setup.getBrick(brickConfig.module, extractSimpleConfig(brickConfig), parent);
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {

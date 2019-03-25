@@ -6,11 +6,11 @@ module.exports = {
 			type: 'array',
 			cardinality: 'multiple',
 			minRequired: 2,
-			resolver: function(args) {
+			resolver: function() {
 				let res = 0;
 
-				for(let i = 0; i < args.length; i++)
-					res += args[i];
+				for(let i = 0; i < arguments.length; i++)
+					res += arguments[i];
 
 				return res;
 			}
@@ -23,11 +23,11 @@ module.exports = {
 			type: 'array',
 			cardinality: 'multiple',
 			minRequired: 2,
-			resolver: function(args) {
-				let res = args[0];
+			resolver: function() {
+				let res = arguments[0];
 
-				for(let i = 1; i < args.length; i++)
-					res -= args[i];
+				for(let i = 1; i < arguments.length; i++)
+					res -= arguments[i];
 
 				return res;
 			}
@@ -40,11 +40,11 @@ module.exports = {
 			type: 'array',
 			cardinality: 'multiple',
 			minRequired: 2,
-			resolver: function(args) {
-				let res = args[0];
+			resolver: function() {
+				let res = arguments[0];
 
-				for(let i = 1; i < args.length; i++)
-					res /= args[i];
+				for(let i = 1; i < arguments.length; i++)
+					res /= arguments[i];
 
 				return res;
 			}

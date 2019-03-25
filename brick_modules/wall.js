@@ -1,5 +1,11 @@
+let mw = require('../core/mindwalls.js');
+
 module.exports = {
-	'core.bricks.wall': function(setup) {
+	id: 'wall',
+	loader: function(setup) {
+		setup.import(mw.bricks.nested);
+		setup.import(mw.bricks.jqGeneric);
+
 		let mainBrick = null;
 		let emptySpan = $('<span>(empty)</span>');
 
