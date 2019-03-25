@@ -1,5 +1,29 @@
 let mw = require('../core/mindwalls.js');
 
+mw.actions.register([
+	{
+		// Insert a new brick after
+		key: 13,
+		action: function() {
+			let activeBrick = mw.generalUI.getMeta().model.getActiveBrick();
+
+			if(activeBrick != null && activeBrick.model.instanceOf('literal')) {
+				mw.generalUI.showInputDialog({
+					title: 'Set literal value...',
+					placeholder: 'Enter a number, a string, etc...',
+					relativeTo: activeBrick.view.getContainer(),
+					handle: function(textVal) {
+						if(!isNaN(textVal))
+							textVal = Number(textVal);
+
+						activeBrick.model.setValue(textVal);
+					}
+				});
+			}
+		}
+	}
+]);
+
 module.exports = {
 	id: 'meta',
 	loader: function(setup) {
@@ -181,6 +205,26 @@ module.exports = {
 							}
 						}
 					},
+					moveToClosestBrick: function() {
+						if(activeWall == null)
+							return;
+
+						let currBrick = getActiveBrickFromWall(activeWall);						
+
+						if(currBrick != null) {
+							let parentBrick = currBrick.model.getParent();
+							let nextBrick = parentBrick.model.getPrevSiblingOf(currBrick);
+
+							if(nextBrick == null) {
+								currBrick = parentBrick.model.getNextSiblingOf(currBrick);
+
+								if(currBrick != null)
+									changeActiveBrickOfWall(meta, activeWall, currBrick);
+								else if(!parentBrick.model.instanceOf('wall'))
+									changeActiveBrickOfWall(meta, activeWall, parentBrick);
+							}							
+						}
+					}
 				}
 			};
 		})

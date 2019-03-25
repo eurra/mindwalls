@@ -176,15 +176,16 @@ mw.actions.register([
 			metaBrick.model.moveToPrevSiblingBrick();
 		}
 	},
-	/*{
+	{
 		// Supr - remove brick
 		key: 46,
 		action: function() {
-			let targetBrick = getNearestOfActiveBrickWithin(activeWall);
-			let toRemoveBrick = getActiveBrickOf(activeWall);
-			changeActiveBrickOf(activeWall, targetBrick);
-			highlightBrick(getActiveBrickOf(activeWall));
-			toRemoveBrick.dispose();
+			let currBrick = metaBrick.model.getActiveBrick();
+
+			if(currBrick != null) {
+				metaBrick.model.moveToClosestBrick();
+				currBrick.model.dispose();
+			}
 		}
-	}*/
+	}
 ]);
