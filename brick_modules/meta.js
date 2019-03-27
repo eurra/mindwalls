@@ -217,12 +217,16 @@ module.exports = {
 
 							if(nextBrick == null) {
 								currBrick = parentBrick.model.getNextSiblingOf(currBrick);
+								console.log(currBrick);
 
 								if(currBrick != null)
 									changeActiveBrickOfWall(meta, activeWall, currBrick);
 								else if(!parentBrick.model.instanceOf('wall'))
 									changeActiveBrickOfWall(meta, activeWall, parentBrick);
-							}							
+							}
+							else {
+								changeActiveBrickOfWall(meta, activeWall, nextBrick);	
+							}
 						}
 					}
 				}

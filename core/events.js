@@ -1,12 +1,38 @@
 module.exports = {
-	builder: function() {
-		let eventNames = new Set();
+	create: function() {
+		let namespaces = {};
 		let handlers = {};
+		let target = {};
 
 		return {
-			registerEvents: function(events) {
-				for(let i = 0; i < events.length; i++)
-					eventNames.add(events[i]);
+			addEvents: function(ns, events) {
+				if(!namespaces[ns])
+					namespaces[ns] = new Set();
+
+				let nsObj = namespaces[ns];
+
+				for(let i = 0; i < events.length; i++) {
+					let eventName = events[i];
+					nsObj.add(eventName);
+
+					target[eventName] = function() {
+						if(handlers[eventName]) {
+							for(let j in handlers[eventName])
+								handlers[eventName][j].apply(null, arguments);
+						}							
+					};
+				}
+			},
+			removeEvents: function(ns) {
+				if(!namespaces[ns])
+					return;
+
+				namespaces[ns].forEach(function(en) {
+					delete handlers[en];
+					delete target[en];
+				});
+
+				delete namespaces[ns];
 			},
 			addHandler: function(eventName, handler) {
 				if(!handlers[eventName])
@@ -14,19 +40,8 @@ module.exports = {
 
 				handlers[eventName].push(handler);
 			},
-			build: function() {
-				let result = {};
-
-				eventNames.forEach(function(elem) {
-					result[elem] = function() {
-						if(handlers[elem]) {
-							for(let j in handlers[elem])
-								handlers[elem][j].apply(null, arguments);
-						}							
-					};
-				});
-
-				return result;
+			get target() {
+				return target;
 			}
 		};
 	}

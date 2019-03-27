@@ -99,14 +99,14 @@ module.exports = {
 			brick.view.getContent().append(content);
 			brick.view.setFocusElem(content);
 
-			brick.view.getChildrenContainer().
+			/*brick.view.getChildrenContainer().
 				addClass('noChilds').
 				on('DOMSubtreeModified', function() {
 					if($(this).children().length === 0)
 						$(this).addClass('noChilds');	
 					else
 						$(this).removeClass('noChilds');
-				});
+				});*/
 		})
 	}
 };
