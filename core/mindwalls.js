@@ -5,6 +5,7 @@ module.exports = {
 	get actions() { return require('./actions'); },
 	get functions() { return require('./functions'); },
 	get events() { return require('./events'); },
+	get dynamicAPI() { return require('./dynamic-api'); },
 	get bricks() {
 		return {
 			get base() { return require('../brick_modules/brick-base'); },

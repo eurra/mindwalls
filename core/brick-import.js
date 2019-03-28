@@ -9,13 +9,23 @@ function extractSimpleConfig(cfg) {
 }
 
 function importBricks(brickConfig, parent = null) {
-	let newBrick = mw.setup.getBrick(brickConfig.module, extractSimpleConfig(brickConfig), parent);
+	let newBrick = mw.setup.createBrick();
+	newBrick._import(brickConfig.module, extractSimpleConfig(brickConfig));
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {
 			importBricks(brickConfig.childs[i], newBrick);
 		}
 	}
+
+	if(parent != null)
+		newBrick.setParent(parent);
+
+	if(brickConfig.name)
+		newBrick.setName(brickConfig.name);
+
+	if(brickConfig.value)
+		newBrick.setValue(brickConfig.value);
 
 	return newBrick;
 }
