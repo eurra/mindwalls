@@ -1,6 +1,6 @@
 let mw = require('../core/mindwalls.js');
 
-mw.actions.register([
+/*mw.actions.register([
 	{
 		// Insert a new brick after
 		key: 13,
@@ -22,19 +22,16 @@ mw.actions.register([
 			}
 		}
 	}
-]);
+]);*/
 
 module.exports = {
 	id: 'meta',
 	loader: function(setup) {
+		setup.import(mw.bricks.jqContainer);
 		setup.import(mw.bricks.nested);
 
 		let activeWall = null;
-		let activeBricksMap = new Map();
-
-		setup.registerEvents([
-			'activeWallSet', 'activeBrickSet'
-		]);
+		let activeBricksMap = new Map();		
 
 		function getActiveBrickFromWall(wall) {
 			let brick = null;
@@ -42,7 +39,7 @@ module.exports = {
 			if(activeBricksMap.has(wall))
 				brick = activeBricksMap.get(wall);
 			else {
-				brick = wall.model.getFirstChild();
+				brick = wall.getFirstChild();
 
 				if(brick != null)
 					activeBricksMap.set(brick, wall);
@@ -53,7 +50,7 @@ module.exports = {
 
 		function switchToActiveBrickFromWall(meta, wall) {
 			let brick = getActiveBrickFromWall(wall);
-			meta.events.activeBrickSet(brick);
+			meta.onActiveBrickSet(brick);
 		}
 
 		function changeActiveBrickOfWall(meta, wall, brick) {
@@ -65,194 +62,195 @@ module.exports = {
 
 		function changeActiveWall(meta, wall) {
 			if(wall != null) {
-				wall.model.mustBe('wall');
+				wall.mustBe('wall');
 				activeWall = wall;				
 				switchToActiveBrickFromWall(meta, activeWall);
-				meta.events.activeWallSet(activeWall);
+				meta.onActiveWallSet(activeWall);
 			}
 		}
 
-		setup.extend(function(meta){
-			return {
-				model: {
-					addWalls: function(toAdd) {
-						let wallToActivate = null;
+		setup.addEvents([
+			'onActiveWallSet', 'onActiveBrickSet'
+		]);
 
-						for(let i = 0; i < toAdd.length; i++) {
-							toAdd[i].model.mustBe('wall');
-							toAdd[i].model.setParent(meta);
+		setup.extend({
+			addWalls: function(toAdd) {
+				let wallToActivate = null;
 
-							if(wallToActivate == null)
-								wallToActivate = toAdd[i];
+				for(let i = 0; i < toAdd.length; i++) {
+					toAdd[i].mustBe('wall');
+					toAdd[i].setParent(this);
+
+					if(wallToActivate == null)
+						wallToActivate = toAdd[i];
+				}
+
+				if(wallToActivate != null)
+					this.setActiveWall(wallToActivate);
+			},
+			getActiveWall: function() {
+				return activeWall;
+			},
+			setActiveWall: function(wall) {						
+				changeActiveWall(this, wall);
+			},
+			getActiveBrick: function() {
+				let activeWall = this.getActiveWall();
+
+				if(activeWall != null)
+					return getActiveBrickFromWall(activeWall);
+
+				return null;
+			},
+			moveToNextWall: function() {
+				if(activeWall == null)
+					return;
+
+				this.setActiveWall(
+					this.getNextSiblingOf(activeWall)
+				);
+			},
+			moveToPrevWall: function() {
+				if(activeWall == null)
+					return;
+
+				this.setActiveWall(
+					this.getPrevSiblingOf(activeWall)
+				);
+			},
+			moveToChildBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);
+
+				if(currBrick != null && currBrick.instanceOf('nested')) {							
+					let childBrick = currBrick.getFirstChild();
+
+					if(childBrick != null)
+						changeActiveBrickOfWall(this, activeWall, childBrick);
+				}
+			},
+			moveToParentBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+
+					if(parentBrick != null && !parentBrick.instanceOf('wall'))
+						changeActiveBrickOfWall(this, activeWall, parentBrick);
+				}
+			},
+			moveToNextSiblingBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+					currBrick = parentBrick.getNextSiblingOf(currBrick);
+
+					if(currBrick != null) {								
+						changeActiveBrickOfWall(this, activeWall, currBrick);
+					}
+					else {
+						while(!parentBrick.instanceOf('wall') && parentBrick.getNextSiblingOf(currBrick) == null) {
+							currBrick = parentBrick;
+							parentBrick = currBrick.getParent();
 						}
 
-						if(wallToActivate != null)
-							meta.model.setActiveWall(wallToActivate);
-					},
-					getActiveWall: function() {
-						return activeWall;
-					},
-					setActiveWall: function(wall) {						
-						changeActiveWall(meta, wall);
-					},
-					getActiveBrick: function() {
-						let activeWall = meta.model.getActiveWall();
-
-						if(activeWall != null)
-							return getActiveBrickFromWall(activeWall);
-
-						return null;
-					},
-					moveToNextWall: function() {
-						if(activeWall == null)
-							return;
-
-						meta.model.setActiveWall(
-							meta.model.getNextSiblingOf(activeWall)
-						);
-					},
-					moveToPrevWall: function() {
-						if(activeWall == null)
-							return;
-
-						meta.model.setActiveWall(
-							meta.model.getPrevSiblingOf(activeWall)
-						);
-					},
-					moveToChildBrick: function() {
-						if(activeWall == null)
-							return;
-
-						let currBrick = getActiveBrickFromWall(activeWall);
-
-						if(currBrick != null && currBrick.model.instanceOf('nested')) {							
-							let childBrick = currBrick.model.getFirstChild();
-
-							if(childBrick != null)
-								changeActiveBrickOfWall(meta, activeWall, childBrick);
-						}
-					},
-					moveToParentBrick: function() {
-						if(activeWall == null)
-							return;
-
-						let currBrick = getActiveBrickFromWall(activeWall);						
+						currBrick = parentBrick.getNextSiblingOf(currBrick);
 
 						if(currBrick != null) {
-							let parentBrick = currBrick.model.getParent();
+							while(currBrick.instanceOf('nested'))
+								currBrick = currBrick.getFirstChild();
 
-							if(parentBrick != null && !parentBrick.model.instanceOf('wall'))
-								changeActiveBrickOfWall(meta, activeWall, parentBrick);
-						}
-					},
-					moveToNextSiblingBrick: function() {
-						if(activeWall == null)
-							return;
-
-						let currBrick = getActiveBrickFromWall(activeWall);						
-
-						if(currBrick != null) {
-							let parentBrick = currBrick.model.getParent();
-							currBrick = parentBrick.model.getNextSiblingOf(currBrick);
-
-							if(currBrick != null) {								
-								changeActiveBrickOfWall(meta, activeWall, currBrick);
-							}
-							else {
-								while(!parentBrick.model.instanceOf('wall') && parentBrick.model.getNextSiblingOf(currBrick) == null) {
-									currBrick = parentBrick;
-									parentBrick = currBrick.model.getParent();
-								}
-
-								currBrick = parentBrick.model.getNextSiblingOf(currBrick);
-
-								if(currBrick != null) {
-									while(currBrick.model.instanceOf('nested'))
-										currBrick = currBrick.model.getFirstChild();
-
-									changeActiveBrickOfWall(meta, activeWall, currBrick);
-								}
-							}
-						}
-					},
-					moveToPrevSiblingBrick: function() {
-						if(activeWall == null)
-							return;
-
-						let currBrick = getActiveBrickFromWall(activeWall);						
-
-						if(currBrick != null) {
-							let parentBrick = currBrick.model.getParent();
-							currBrick = parentBrick.model.getPrevSiblingOf(currBrick);
-
-							if(currBrick != null) {
-								changeActiveBrickOfWall(meta, activeWall, currBrick);
-							}
-							else {
-								while(!parentBrick.model.instanceOf('wall') && parentBrick.model.getPrevSiblingOf(currBrick) == null) {
-									currBrick = parentBrick;
-									parentBrick = currBrick.model.getParent();
-								}
-
-								currBrick = parentBrick.model.getPrevSiblingOf(currBrick);
-
-								if(currBrick != null) {
-									while(currBrick.model.instanceOf('nested'))
-										currBrick = currBrick.model.getLastChild();
-
-									changeActiveBrickOfWall(meta, activeWall, currBrick);
-								}
-							}
-						}
-					},
-					moveToClosestBrick: function() {
-						if(activeWall == null)
-							return;
-
-						let currBrick = getActiveBrickFromWall(activeWall);						
-
-						if(currBrick != null) {
-							let parentBrick = currBrick.model.getParent();
-							let nextBrick = parentBrick.model.getPrevSiblingOf(currBrick);
-
-							if(nextBrick == null) {
-								currBrick = parentBrick.model.getNextSiblingOf(currBrick);
-								console.log(currBrick);
-
-								if(currBrick != null)
-									changeActiveBrickOfWall(meta, activeWall, currBrick);
-								else if(!parentBrick.model.instanceOf('wall'))
-									changeActiveBrickOfWall(meta, activeWall, parentBrick);
-							}
-							else {
-								changeActiveBrickOfWall(meta, activeWall, nextBrick);	
-							}
+							changeActiveBrickOfWall(this, activeWall, currBrick);
 						}
 					}
 				}
-			};
-		})
+			},
+			moveToPrevSiblingBrick: function() {
+				if(activeWall == null)
+					return;
 
-		setup.on('childAdded', function(brick, childBrick) {			
-			brick.view.getContainer().append(childBrick.view.getContainer());
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+					currBrick = parentBrick.getPrevSiblingOf(currBrick);
+
+					if(currBrick != null) {
+						changeActiveBrickOfWall(this, activeWall, currBrick);
+					}
+					else {
+						while(!parentBrick.instanceOf('wall') && parentBrick.getPrevSiblingOf(currBrick) == null) {
+							currBrick = parentBrick;
+							parentBrick = currBrick.getParent();
+						}
+
+						currBrick = parentBrick.getPrevSiblingOf(currBrick);
+
+						if(currBrick != null) {
+							while(currBrick.instanceOf('nested'))
+								currBrick = currBrick.getLastChild();
+
+							changeActiveBrickOfWall(this, activeWall, currBrick);
+						}
+					}
+				}
+			},
+			moveToClosestBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+					let nextBrick = parentBrick.getPrevSiblingOf(currBrick);
+
+					if(nextBrick == null) {
+						currBrick = parentBrick.getNextSiblingOf(currBrick);
+						console.log(currBrick);
+
+						if(currBrick != null)
+							changeActiveBrickOfWall(this, activeWall, currBrick);
+						else if(!parentBrick.instanceOf('wall'))
+							changeActiveBrickOfWall(this, activeWall, parentBrick);
+					}
+					else {
+						changeActiveBrickOfWall(this, activeWall, nextBrick);	
+					}
+				}
+			}
 		});
 
-		setup.on('activeWallSet', function(wall) {
+		setup.on('onChildAdded', function(childBrick) {			
+			this.getContainer().append(childBrick.getContainer());
+		});
+
+		setup.on('onActiveWallSet', function(wall) {
 			$('.activeWall').removeClass('activeWall');
 
 			if(wall != null)
-				wall.view.getContainer().addClass('activeWall');
+				wall.getContainer().addClass('activeWall');
 		});
 
-		setup.on('activeBrickSet', function(brick) {
+		setup.on('onActiveBrickSet', function(brick) {
 			$('.activeBrick').removeClass('activeBrick');
 
 			if(brick != null)
-				brick.view.getFocusElem().addClass('activeBrick');
+				brick.getFocusElem().addClass('activeBrick');
 		});
 
 		setup.configure(function(brick) {
-			brick.view.getContainer().
+			console.log(brick);
+			brick.getContainer().
 				addClass('metabrick').
 				attr('tabindex', 0);
 		});

@@ -3,14 +3,10 @@ module.exports = {
 	loader: function(setup) {
 		let container = $('<div>');
 
-		setup.extend(function() {
-			return {
-				view: {
-					getContainer: function() {
-						return container;
-					}
-				}
-			};
+		setup.extend({
+			getContainer: function() {
+				return container;
+			}
 		});
 	}
 };

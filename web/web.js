@@ -1,7 +1,7 @@
 let mw = require('../core/mindwalls');
 
 $(function() {
-	let examples = [
+	/*let examples = [
 		{
 			module: mw.bricks.wall, childs: [{
 				module: mw.bricks.function, id: '<', childs: [
@@ -59,6 +59,18 @@ $(function() {
 		{ 
 			module: mw.bricks.wall 
 		}
+	];*/
+
+	let examples = [
+		{
+			module: mw.bricks.wall, childs: [
+				{ module: mw.bricks.literal, value: 133 },
+				{ module: mw.bricks.literal, value: 50 }
+			]
+		},
+		{ 
+			module: mw.bricks.wall 
+		}
 	];
 
 	//let finalBricks = mindwalls.import.from(examples);
@@ -66,6 +78,6 @@ $(function() {
 
 	let meta = mw.import.from([ { module: mw.bricks.meta } ])[0];
 	let walls = mw.import.from(examples);
-	meta.model.addWalls(walls);	
+	meta.addWalls(walls);	
 	mw.generalUI.setMeta(meta);
 });

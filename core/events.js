@@ -1,48 +1,25 @@
+
+function createEventHandler(target, handlers) {
+	let trigger = function() {
+		for(let i = 0; i < handlers.length; i++)
+			handlers[i].apply(target, arguments);
+	};
+
+	return {
+		add: function(handler) {
+			handlers.push(handler);
+		},
+		call: function() {
+			trigger.apply(target, arguments);
+		},
+		clone: function() {
+			return createEventHandler(target, handlers.slice(0));
+		}
+	};
+}
+
 module.exports = {
-	create: function() {
-		let namespaces = {};
-		let handlers = {};
-		let target = {};
-
-		return {
-			addEvents: function(ns, events) {
-				if(!namespaces[ns])
-					namespaces[ns] = new Set();
-
-				let nsObj = namespaces[ns];
-
-				for(let i = 0; i < events.length; i++) {
-					let eventName = events[i];
-					nsObj.add(eventName);
-
-					target[eventName] = function() {
-						if(handlers[eventName]) {
-							for(let j in handlers[eventName])
-								handlers[eventName][j].apply(null, arguments);
-						}							
-					};
-				}
-			},
-			removeEvents: function(ns) {
-				if(!namespaces[ns])
-					return;
-
-				namespaces[ns].forEach(function(en) {
-					delete handlers[en];
-					delete target[en];
-				});
-
-				delete namespaces[ns];
-			},
-			addHandler: function(eventName, handler) {
-				if(!handlers[eventName])
-					handlers[eventName] = [];
-
-				handlers[eventName].push(handler);
-			},
-			get target() {
-				return target;
-			}
-		};
+	create: function(target) {
+		return createEventHandler(target, []);
 	}
 }

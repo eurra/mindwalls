@@ -3,18 +3,18 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'wall',
 	loader: function(setup) {
-		setup.import(mw.bricks.nested);
 		setup.import(mw.bricks.jqGeneric);
+		setup.import(mw.bricks.nested);
 
 		let mainBrick = null;
 		let emptySpan = $('<span>(empty)</span>');
 
 		setup.configure(function(brick) {
-			brick.view.getContainer().addClass('wall');
-			brick.view.getContent().append(emptySpan);
-			brick.view.getValueContainer().css('display', 'none');
+			brick.getContainer().addClass('wall');
+			brick.getContent().append(emptySpan);
+			brick.getValueContainer().css('display', 'none');
 
-			brick.view.getChildrenContainer().
+			brick.getChildrenContainer().
 				//append(emptySpan).
 				on('DOMSubtreeModified', function() {
 					if($(this).children('div').length === 0)
@@ -24,12 +24,12 @@ module.exports = {
 				});
 		});
 
-		setup.on('childAdded', function(brick, childBrick) {
+		setup.on('onChildAdded', function(childBrick) {
 			mainBrick = childBrick;
 		});
 
-		setup.on('childValueSet', function(brick, childBrick) {
-			brick.model.setValue(childBrick.model.getValue());
+		setup.on('onChildValueSet', function(childBrick) {
+			this.setValue(childBrick.getValue());
 		});
 
 		setup.extend(function(){

@@ -1,6 +1,6 @@
 let mw = require('../core/mindwalls.js');
 
-mw.actions.register([
+/*mw.actions.register([
 	{
 		// F2 - set literal value
 		key: 113,
@@ -22,7 +22,7 @@ mw.actions.register([
 			}
 		}
 	}
-]);
+]);*/
 
 module.exports = {
 	id: 'literal',
@@ -32,13 +32,13 @@ module.exports = {
 		let valueContainer = $('<div class="brick data"></div>');
 
 		setup.configure(function(brick) {
-			brick.view.getContent().append(valueContainer);
-			brick.view.getValueLabel().css('display', 'none');
-			brick.view.setFocusElem(valueContainer);
+			brick.getContent().append(valueContainer);
+			brick.getValueLabel().css('display', 'none');
+			brick.setFocusElem(valueContainer);
 		});
 
-		setup.on('valueSet', function(brick) {
-			let val = brick.model.getValue();
+		setup.on('onValueSet', function() {
+			let val = this.getValue();
 			valueContainer.html(val === null ? '?': val);
 		})
 	}

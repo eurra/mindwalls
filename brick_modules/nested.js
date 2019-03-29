@@ -16,7 +16,7 @@ module.exports = {
 			return node;
 		}
 
-		setup.on('childAdded', function(brick, childBrick) {
+		setup.on('onChildAdded', function(childBrick) {
 			let node = createNodeFor(childBrick);
 
 			if(firstNode == null) {
@@ -30,7 +30,7 @@ module.exports = {
 			}
 		});
 
-		setup.on('childDisposed', function(brick, childBrick) {
+		setup.on('onChildDisposed', function(childBrick) {
 			let nodeToRem = nodesMap.get(childBrick);
 
 			if(firstNode === nodeToRem && lastNode === nodeToRem) {
@@ -53,95 +53,91 @@ module.exports = {
 			nodesMap.delete(childBrick);
 		});
 
-		setup.extend(function() {
-			return {
-				model: {
-					getChilds: function() {
-						let res = [];
-						let currNode = firstNode;
+		setup.extend({
+			getChilds: function() {
+				let res = [];
+				let currNode = firstNode;
 
-						while(currNode != null) {
-							res.push(currNode.brick);
-							currNode = currNode.next;
-						}
-
-						return res;
-					},
-					getFirstChild: function() {
-						if(firstNode == null)
-							return null;
-
-						return firstNode.brick;
-					},
-					getLastChild: function() {
-						if(lastNode == null)
-							return null;
-
-						return lastNode.brick;
-					},
-					getNextSiblingOf: function(childBrick) {
-						let node = nodesMap.get(childBrick);
-
-						if(node == null || node.next == null)
-							return null;
-
-						return node.next.brick;
-					},
-					getNextAllOf: function(childBrick) {
-						let res = [];
-						let node = nodesMap.get(childBrick);
-
-						if(node == null || node.next == null)
-							return res;
-
-						let curr = node.next;
-
-						while(curr != null) {
-							res.push(curr.brick);
-							curr = curr.next;
-						}
-
-						return res;
-					},
-					getPrevSiblingOf: function(childBrick) {
-						let node = nodesMap.get(childBrick);
-
-						if(node == null || node.prev == null)
-							return null;
-
-						return node.prev.brick;
-					},
-					getPrevAllOf: function(childBrick) {
-						let res = [];
-						let node = nodesMap.get(childBrick);
-
-						if(node == null || node.prev == null)
-							return res;
-
-						let curr = node.prev;
-
-						while(curr != null) {
-							res.push(curr.brick);
-							curr = curr.prev;
-						}
-
-						return res;
-					},
-					getValidValues: function() {
-						let res = [];
-						let currNode = firstNode;
-
-						while(currNode != null) {
-							if(currNode.brick.model.getValue())
-								res.push(currNode.brick.model.getValue());
-
-							currNode = currNode.next;
-						}
-
-						return res;
-					}
+				while(currNode != null) {
+					res.push(currNode.brick);
+					currNode = currNode.next;
 				}
-			}	
-		});		
+
+				return res;
+			},
+			getFirstChild: function() {
+				if(firstNode == null)
+					return null;
+
+				return firstNode.brick;
+			},
+			getLastChild: function() {
+				if(lastNode == null)
+					return null;
+
+				return lastNode.brick;
+			},
+			getNextSiblingOf: function(childBrick) {
+				let node = nodesMap.get(childBrick);
+
+				if(node == null || node.next == null)
+					return null;
+
+				return node.next.brick;
+			},
+			getNextAllOf: function(childBrick) {
+				let res = [];
+				let node = nodesMap.get(childBrick);
+
+				if(node == null || node.next == null)
+					return res;
+
+				let curr = node.next;
+
+				while(curr != null) {
+					res.push(curr.brick);
+					curr = curr.next;
+				}
+
+				return res;
+			},
+			getPrevSiblingOf: function(childBrick) {
+				let node = nodesMap.get(childBrick);
+
+				if(node == null || node.prev == null)
+					return null;
+
+				return node.prev.brick;
+			},
+			getPrevAllOf: function(childBrick) {
+				let res = [];
+				let node = nodesMap.get(childBrick);
+
+				if(node == null || node.prev == null)
+					return res;
+
+				let curr = node.prev;
+
+				while(curr != null) {
+					res.push(curr.brick);
+					curr = curr.prev;
+				}
+
+				return res;
+			},
+			getValidValues: function() {
+				let res = [];
+				let currNode = firstNode;
+
+				while(currNode != null) {
+					if(currNode.brick.getValue())
+						res.push(currNode.brick.getValue());
+
+					currNode = currNode.next;
+				}
+
+				return res;
+			}
+		});
 	}
 };

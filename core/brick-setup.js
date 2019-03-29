@@ -1,29 +1,40 @@
 let mw = require('./mindwalls.js');
 
-function resetAPI(targetAPI, baseAPI) {
+function resetAPI(targetAPI, baseAPI, baseEvents) {
 	for(let member in targetAPI)
 		delete targetAPI[member];
 
 	Object.assign(targetAPI, baseAPI);
+
+	for(let member in baseEvents)
+		targetAPI[member] = baseEvents[member].clone();
+
 	return targetAPI;
 }
 
-function loadModule(brickModule, config, loaded, extendHandlers, configHandlers, brickEvents) {
+function loadModule(brickModule, config, loaded, extendObjects, configHandlers, targetAPI) {
 	if(loaded.has(brickModule.id))
 		throw new Error(`Brick module already loaded: '${brickModule.id}'`);
 
 	let setup = {
 		import: function(importModule) {
-			loadModule(importModule, config, loaded, extendHandlers, configHandlers, brickEvents);
+			loadModule(importModule, config, loaded, extendObjects, configHandlers);
 		},
 		addEvents: function(events) {
-			brickEvents.addEvents(brickModule.id, events);
+			let toExtend = {};
+
+			for(let i = 0; i < events.length; i++)
+				toExtend[events[i]] = mw.events.create(targetAPI);
+
+			this.extend(toExtend);
 		},
 		on: function(eventName, eventHandler) {
-			brickEvents.addHandler(eventName, eventHandler);
+			this.configure(function(brick) {	
+				brick[eventName].add(eventHandler);
+			});
 		},
-		extend: function(extendHandler) {
-			extendHandlers.push(extendHandler);
+		extend: function(extendObj) {
+			extendObjects.push(extendObj);
 		},
 		configure: function(configHandler) {
 			configHandlers.push(configHandler);
@@ -40,16 +51,15 @@ function createBrick() {
 	let name = null;
 
 	let loaded = new Set();
-	let brickEvents = mw.events.create();
 	let targetAPI = {};
 
 	let baseAPI = {
 		dispose: function() {
-			this.onDisposed();
+			this.onDisposed.call();
 
 			if(parent != null) {
-				parent.onChildDisposed(this);
-				parent.onChildSetModified(this);
+				parent.onChildDisposed.call(this);
+				parent.onChildSetModified.call(this);
 			}
 		},
 		getParent: function() {
@@ -57,11 +67,11 @@ function createBrick() {
 		},
 		setParent: function(p) {
 			parent = p;
-			this.onParentSet();
+			this.onParentSet.call();
 
 			if(parent != null) {
-				parent.onChildAdded(this);
-				parent.onChildSetModified(this);
+				parent.onChildAdded.call(this);
+				parent.onChildSetModified.call(this);
 			}
 		},
 		getValue: function() {
@@ -69,11 +79,11 @@ function createBrick() {
 		},
 		setValue: function(v) {
 			value = v;
-			this.onValueSet();
+			this.onValueSet.call();
 
 			if(parent != null) {
-				parent.onChildValueSet(this);
-				parent.onChildSetModified(this);
+				parent.onChildValueSet.call(this);
+				parent.onChildSetModified.call(this);
 			}
 		},
 		getName: function() {
@@ -81,11 +91,11 @@ function createBrick() {
 		},
 		setName: function(n) {
 			name = n;
-			this.onNameSet();
+			this.onNameSet.call();
 
 			if(parent != null) {
-				parent.onChildNameSet(this);
-				parent.onChildSetModified(this);
+				parent.onChildNameSet.call(this);
+				parent.onChildSetModified.call(this);
 			}
 		},
 		instanceOf: function(type) {
@@ -97,29 +107,42 @@ function createBrick() {
 		mustBe: function(type) {
 			if(!this.instanceOf(type))
 				throw new Error(`Brick type validation failed: '${type}'`);
-		}
+		},
+		
+	};
+
+	let baseEvents = {
+		onDisposed: mw.events.create(targetAPI),
+		onChildDisposed: mw.events.create(targetAPI),
+		onChildSetModified: mw.events.create(targetAPI),
+		onParentSet: mw.events.create(targetAPI),
+		onChildAdded: mw.events.create(targetAPI),
+		onValueSet: mw.events.create(targetAPI),
+		onChildValueSet: mw.events.create(targetAPI),
+		onNameSet: mw.events.create(targetAPI),
+		onChildNameSet: mw.events.create(targetAPI)
 	};
 
 	baseAPI._reset = function() {
-		resetAPI(targetAPI, baseAPI);
+		resetAPI(targetAPI, baseAPI, baseEvents);
 	};
 
 	baseAPI._import = function(brickModule, config = {}) {
-		let extendHandlers = [];
+		let extendObjects = [];
 		let configHandlers = [];
 
-		loadModule(brickModule, config, loaded, extendHandlers, configHandlers, brickEvents);
+		loadModule(brickModule, config, loaded, extendObjects, configHandlers, targetAPI);
 
-		// Attach brick API
-		for(let i = 0; i < extendHandlers.length; i++)
-			extendHandlers[i](targetAPI);
+		// Extend brick
+		for(let i = 0; i < extendObjects.length; i++) 
+			Object.assign(targetAPI, extendObjects[i]);
 
 		// Configure brick
 		for(let i = 0; i < configHandlers.length; i++)
 			configHandlers[i](targetAPI);
 	};
 
-	return targetAPI;
+	return resetAPI(targetAPI, baseAPI, baseEvents);
 }
 
 module.exports = {

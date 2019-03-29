@@ -1,6 +1,10 @@
+let mw = require('../core/mindwalls.js');
+
 module.exports = {
 	id: 'jq-generic',
-	loader: function(setup) {	
+	loader: function(setup) {
+		setup.import(mw.bricks.jqContainer);
+
 		let nameLabel = $('<div class="brick paramName"></div>');
 		let nameCont = $('<div class="horizontal"></div>').append(nameLabel);
 		let valueLabel = $('<div class="brick result"></div>');
@@ -10,7 +14,7 @@ module.exports = {
 		let focusElem = content;
 
 		setup.configure(function(brick) {
-			brick.view.getContainer().
+			brick.getContainer().
 				addClass('horizontal').
 				append(nameCont).
 				append(valueCont).
@@ -18,16 +22,16 @@ module.exports = {
 				append(childrenCont);
 		});
 
-		setup.on('disposed', function(brick) {
-			brick.view.getContainer().remove();
+		setup.on('onDisposed', function() {
+			this.getContainer().remove();
 		});
 
-		setup.on('childAdded', function(brick, childBrick) {			
-			brick.view.getChildrenContainer().append(childBrick.view.getContainer());
+		setup.on('onChildAdded', function(childBrick) {			
+			this.getChildrenContainer().append(childBrick.getContainer());
 		});
 
-		setup.on('valueSet', function(brick) {
-			let val = brick.model.getValue();		
+		setup.on('onValueSet', function() {
+			let val = this.getValue();		
 			let text;
 
 			if(val == null)
@@ -37,47 +41,43 @@ module.exports = {
 			else
 				text = val.toString();
 
-			brick.view.getValueLabel().html(text);
+			this.getValueLabel().html(text);
 		});
 
-		setup.on('nameSet', function(brick) {
-			let name = brick.model.getName();
+		setup.on('onNameSet', function() {
+			let name = this.getName();
 
 			if(name !== null)
-				brick.view.getNameLabel().html(name).css('display', '');
+				this.getNameLabel().html(name).css('display', '');
 			else
-				brick.view.getNameLabel().html('').css('display', 'none');
+				this.getNameLabel().html('').css('display', 'none');
 		});
 
-		setup.extend(function() {
-			return {
-				view: {
-					setFocusElem: function(elem) {
-						focusElem = elem;
-					},
-					getFocusElem: function() {
-						return focusElem;
-					},
-					getContent: function() {
-						return content;
-					},
-					getChildrenContainer: function() {
-						return childrenCont;
-					},
-					getValueContainer: function() {
-						return valueCont;
-					},
-					getValueLabel: function() {
-						return valueLabel;
-					},
-					getNameContainer: function() {
-						return nameCont;
-					},
-					getNameLabel: function() {
-						return nameLabel;
-					}
-				}
-			};				
+		setup.extend({
+			setFocusElem: function(elem) {
+				focusElem = elem;
+			},
+			getFocusElem: function() {
+				return focusElem;
+			},
+			getContent: function() {
+				return content;
+			},
+			getChildrenContainer: function() {
+				return childrenCont;
+			},
+			getValueContainer: function() {
+				return valueCont;
+			},
+			getValueLabel: function() {
+				return valueLabel;
+			},
+			getNameContainer: function() {
+				return nameCont;
+			},
+			getNameLabel: function() {
+				return nameLabel;
+			}
 		});
 	}
 }

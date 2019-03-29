@@ -8,9 +8,9 @@ module.exports = {
 	get dynamicAPI() { return require('./dynamic-api'); },
 	get bricks() {
 		return {
-			get base() { return require('../brick_modules/brick-base'); },
 			get nested() { return require('../brick_modules/nested'); },
 			get meta() { return require('../brick_modules/meta'); },
+			get jqContainer() { return require('../brick_modules/jq-container'); },
 			get jqGeneric() { return require('../brick_modules/jq-generic'); },
 			get wall() { return require('../brick_modules/wall'); },
 			get literal() { return require('../brick_modules/literal'); },

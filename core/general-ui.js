@@ -3,10 +3,10 @@ let metaBrick = null;
 
 module.exports = {
 	setMeta: function(meta) {
-		meta.model.mustBe('meta');
+		meta.mustBe('meta');
 		$('body').empty();
-		meta.view.getContainer().appendTo('body');
-		mw.actions.setTargetElem(meta.view.getContainer());
+		meta.getContainer().appendTo('body');
+		mw.actions.setTargetElem(meta.getContainer());
 
 		metaBrick = meta;
 	},
@@ -52,7 +52,7 @@ module.exports = {
 	}
 };
 
-function checkIntersect(elem1, elem2) {
+/*function checkIntersect(elem1, elem2) {
 	let e1L = elem1.position().left;
 	let e1R = e1L + elem1.width();
 
@@ -188,4 +188,4 @@ mw.actions.register([
 			}
 		}
 	}
-]);
+]);*/
