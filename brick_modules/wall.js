@@ -10,7 +10,7 @@ module.exports = {
 		let emptySpan = $('<span>(empty)</span>');
 
 		setup.configure(function(brick) {
-			brick.getContainer().addClass('wall');
+			brick.getView().addClass('wall');
 			brick.getContent().append(emptySpan);
 			brick.getValueContainer().css('display', 'none');
 

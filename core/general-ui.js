@@ -5,8 +5,8 @@ module.exports = {
 	setMeta: function(meta) {
 		meta.mustBe('meta');
 		$('body').empty();
-		meta.getContainer().appendTo('body');
-		mw.actions.setTargetElem(meta.getContainer());
+		meta.getView().appendTo('body');
+		mw.actions.setTargetElem(meta.getView());
 
 		metaBrick = meta;
 	},
@@ -52,7 +52,7 @@ module.exports = {
 	}
 };
 
-/*function checkIntersect(elem1, elem2) {
+function checkIntersect(elem1, elem2) {
 	let e1L = elem1.position().left;
 	let e1R = e1L + elem1.width();
 
@@ -67,25 +67,25 @@ mw.actions.register([
 		ctrlKey: true,
 		key: 38,
 		action: function() {
-			if(metaBrick == null || metaBrick.model.getActiveWall() == null)
+			if(metaBrick == null || metaBrick.getActiveWall() == null)
 				return;
 
-			let nextWalls = metaBrick.model.getPrevAllOf(metaBrick.model.getActiveWall());
-			let top = metaBrick.model.getActiveWall().view.getContainer().position().top;
+			let nextWalls = metaBrick.getPrevAllOf(metaBrick.getActiveWall());
+			let top = metaBrick.getActiveWall().getView().position().top;
 			let target = null;
 			let i = 0;
 
 			while(target == null && i < nextWalls.length) {
-				let checkBottom = nextWalls[i].view.getContainer().position().top + nextWalls[i].view.getContainer().height();
+				let checkBottom = nextWalls[i].getView().position().top + nextWalls[i].getView().height();
 
-				if(checkBottom < top && checkIntersect(nextWalls[i].view.getContainer(), metaBrick.model.getActiveWall().view.getContainer()))
+				if(checkBottom < top && checkIntersect(nextWalls[i].getView(), metaBrick.getActiveWall().getView()))
 					target = nextWalls[i];
 
 				i++;
 			}
 
 			if(target != null)
-				metaBrick.model.setActiveWall(target);
+				metaBrick.setActiveWall(target);
 		}
 	},
 	{
@@ -93,25 +93,25 @@ mw.actions.register([
 		ctrlKey: true,
 		key: 40,
 		action: function() {
-			if(metaBrick == null || metaBrick.model.getActiveWall() == null)
+			if(metaBrick == null || metaBrick.getActiveWall() == null)
 				return;
 
-			let nextWalls = metaBrick.model.getNextAllOf(metaBrick.model.getActiveWall());
-			let bottom = metaBrick.model.getActiveWall().view.getContainer().position().top + metaBrick.model.getActiveWall().view.getContainer().height();			
+			let nextWalls = metaBrick.getNextAllOf(metaBrick.getActiveWall());
+			let bottom = metaBrick.getActiveWall().getView().position().top + metaBrick.getActiveWall().getView().height();			
 			let target = null;
 			let i = 0;
 
 			while(target == null && i < nextWalls.length) {
-				let checkTop = nextWalls[i].view.getContainer().position().top;
+				let checkTop = nextWalls[i].getView().position().top;
 
-				if(bottom < checkTop && checkIntersect(nextWalls[i].view.getContainer(), metaBrick.model.getActiveWall().view.getContainer()))
+				if(bottom < checkTop && checkIntersect(nextWalls[i].getView(), metaBrick.getActiveWall().getView()))
 					target = nextWalls[i];
 
 				i++;
 			}
 
 			if(target != null)
-				metaBrick.model.setActiveWall(target);
+				metaBrick.setActiveWall(target);
 		}
 	},
 	{
@@ -122,7 +122,7 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToNextWall();
+			metaBrick.moveToNextWall();
 		}
 	},
 	{
@@ -133,7 +133,7 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToPrevWall();
+			metaBrick.moveToPrevWall();
 		}
 	},
 	{
@@ -143,7 +143,7 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToParentBrick();
+			metaBrick.moveToParentBrick();
 		}
 	},
 	{
@@ -153,7 +153,7 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToChildBrick();
+			metaBrick.moveToChildBrick();
 		}
 	},
 	{
@@ -163,7 +163,7 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToNextSiblingBrick();
+			metaBrick.moveToNextSiblingBrick();
 		}
 	},
 	{
@@ -173,19 +173,21 @@ mw.actions.register([
 			if(metaBrick == null)
 				return;
 
-			metaBrick.model.moveToPrevSiblingBrick();
+			metaBrick.moveToPrevSiblingBrick();
 		}
 	},
 	{
 		// Supr - remove brick
 		key: 46,
 		action: function() {
-			let currBrick = metaBrick.model.getActiveBrick();
+			let currBrick = metaBrick.getActiveBrick();
 
 			if(currBrick != null) {
-				metaBrick.model.moveToClosestBrick();
-				currBrick.model.dispose();
+				//metaBrick.moveToClosestBrick();				
+				//currBrick.dispose();
+				currBrick._reset();
+				currBrick._import(mw.bricks.empty);
 			}
 		}
 	}
-]);*/
+]);

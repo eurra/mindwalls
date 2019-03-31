@@ -27,7 +27,6 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'meta',
 	loader: function(setup) {
-		setup.import(mw.bricks.jqContainer);
 		setup.import(mw.bricks.nested);
 
 		let activeWall = null;
@@ -50,7 +49,7 @@ module.exports = {
 
 		function switchToActiveBrickFromWall(meta, wall) {
 			let brick = getActiveBrickFromWall(wall);
-			meta.onActiveBrickSet(brick);
+			meta.onActiveBrickSet.call(brick);
 		}
 
 		function changeActiveBrickOfWall(meta, wall, brick) {
@@ -65,7 +64,7 @@ module.exports = {
 				wall.mustBe('wall');
 				activeWall = wall;				
 				switchToActiveBrickFromWall(meta, activeWall);
-				meta.onActiveWallSet(activeWall);
+				meta.onActiveWallSet.call(activeWall);
 			}
 		}
 
@@ -216,7 +215,6 @@ module.exports = {
 
 					if(nextBrick == null) {
 						currBrick = parentBrick.getNextSiblingOf(currBrick);
-						console.log(currBrick);
 
 						if(currBrick != null)
 							changeActiveBrickOfWall(this, activeWall, currBrick);
@@ -231,26 +229,25 @@ module.exports = {
 		});
 
 		setup.on('onChildAdded', function(childBrick) {			
-			this.getContainer().append(childBrick.getContainer());
+			this.getView().append(childBrick.getView());
 		});
 
 		setup.on('onActiveWallSet', function(wall) {
 			$('.activeWall').removeClass('activeWall');
 
 			if(wall != null)
-				wall.getContainer().addClass('activeWall');
+				wall.getView().addClass('activeWall');
 		});
 
 		setup.on('onActiveBrickSet', function(brick) {
 			$('.activeBrick').removeClass('activeBrick');
 
 			if(brick != null)
-				brick.getFocusElem().addClass('activeBrick');
+				brick.getView().addClass('activeBrick');
 		});
 
 		setup.configure(function(brick) {
-			console.log(brick);
-			brick.getContainer().
+			brick.getView().
 				addClass('metabrick').
 				attr('tabindex', 0);
 		});

@@ -3,18 +3,15 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'jq-generic',
 	loader: function(setup) {
-		setup.import(mw.bricks.jqContainer);
-
 		let nameLabel = $('<div class="brick paramName"></div>');
-		let nameCont = $('<div class="horizontal"></div>').append(nameLabel);
+		let nameCont = $('<div class="horizontal"></div>').append(nameLabel).css('display', 'none');
 		let valueLabel = $('<div class="brick result"></div>');
-		let valueCont = $('<div class="horizontal"></div>').append(valueLabel);
+		let valueCont = $('<div class="horizontal"></div>').append(valueLabel).css('display', 'none');
 		let content = $('<div class="horizontal wide"></div>');
-		let childrenCont = $('<div class="vertical"></div>');		
-		let focusElem = content;
+		let childrenCont = $('<div class="vertical"></div>');
 
 		setup.configure(function(brick) {
-			brick.getContainer().
+			brick.getView().
 				addClass('horizontal').
 				append(nameCont).
 				append(valueCont).
@@ -22,12 +19,8 @@ module.exports = {
 				append(childrenCont);
 		});
 
-		setup.on('onDisposed', function() {
-			this.getContainer().remove();
-		});
-
 		setup.on('onChildAdded', function(childBrick) {			
-			this.getChildrenContainer().append(childBrick.getContainer());
+			this.getChildrenContainer().append(childBrick.getView());
 		});
 
 		setup.on('onValueSet', function() {
@@ -47,19 +40,11 @@ module.exports = {
 		setup.on('onNameSet', function() {
 			let name = this.getName();
 
-			if(name !== null)
-				this.getNameLabel().html(name).css('display', '');
-			else
-				this.getNameLabel().html('').css('display', 'none');
+			if(name != null)
+				this.getNameLabel().html(name);
 		});
 
 		setup.extend({
-			setFocusElem: function(elem) {
-				focusElem = elem;
-			},
-			getFocusElem: function() {
-				return focusElem;
-			},
 			getContent: function() {
 				return content;
 			},

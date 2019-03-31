@@ -1,8 +1,11 @@
 
 function createEventHandler(target, handlers) {
+	let finalTarget = target;
+
 	let trigger = function() {
-		for(let i = 0; i < handlers.length; i++)
-			handlers[i].apply(target, arguments);
+		for(let i = 0; i < handlers.length; i++) {			
+			handlers[i].apply(finalTarget, arguments);
+		}
 	};
 
 	return {
@@ -10,16 +13,16 @@ function createEventHandler(target, handlers) {
 			handlers.push(handler);
 		},
 		call: function() {
-			trigger.apply(target, arguments);
+			trigger.apply(finalTarget, arguments);
 		},
 		clone: function() {
-			return createEventHandler(target, handlers.slice(0));
+			return createEventHandler(finalTarget, handlers.slice(0));
 		}
 	};
 }
 
 module.exports = {
-	create: function(target) {
+	create: function(target) {		
 		return createEventHandler(target, []);
 	}
 }

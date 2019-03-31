@@ -1,7 +1,7 @@
 let mw = require('../core/mindwalls');
 
 $(function() {
-	/*let examples = [
+	let examples = [
 		{
 			module: mw.bricks.wall, childs: [{
 				module: mw.bricks.function, id: '<', childs: [
@@ -59,9 +59,9 @@ $(function() {
 		{ 
 			module: mw.bricks.wall 
 		}
-	];*/
+	];
 
-	let examples = [
+	/*let examples = [
 		{
 			module: mw.bricks.wall, childs: [
 				{ module: mw.bricks.literal, value: 133 },
@@ -71,7 +71,7 @@ $(function() {
 		{ 
 			module: mw.bricks.wall 
 		}
-	];
+	];*/
 
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);

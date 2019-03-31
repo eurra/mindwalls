@@ -123,8 +123,9 @@ body, html {
 }
 
 .activeBrick {
+	border-radius: 5px;
 	border: 2px solid blue;
-	margin: 0px;
+	margin: -2px;
 }
 
 .wide {

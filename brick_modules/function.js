@@ -3,74 +3,66 @@ let mw = require('../core/mindwalls.js');
 function updateFunction(brick) {
 	let finalValue = null;
 
-	if(brick.model.getParamsType() === 'array') {
-		let finalVals = brick.model.getValidValues();
+	if(brick.getParamsType() === 'array') {
+		let finalVals = brick.getValidValues();
 
 		if(
-			(brick.model.getCardinality() == 'multiple' && (!brick.model.getMinRequired() || finalVals.length >= brick.model.getMinRequired())) ||
-			(brick.model.getCardinality() && finalVals.length == brick.model.getCardinality())
+			(brick.getCardinality() == 'multiple' && (!brick.getMinRequired() || finalVals.length >= brick.getMinRequired())) ||
+			(brick.getCardinality() && finalVals.length == brick.getCardinality())
 		) {			
-			finalValue = brick.model.resolver.apply(null, finalVals);
+			finalValue = brick.getResolver().apply(null, finalVals);
 		}
 	}
-	else if(brick.model.getParamsType() === 'map') {
-		let finalVals = brick.model.getValidValuesAsMap();
+	else if(brick.getParamsType() === 'map') {
+		let finalVals = brick.getValidValuesAsMap();
 
-		if(Object.keys(finalVals).length == Object.keys(brick.model.getArgs()).length)	
-			finalValue = brick.model.resolver(finalVals);
+		if(Object.keys(finalVals).length == Object.keys(brick.getArgs()).length)	
+			finalValue = brick.getResolver()(finalVals);
 	}
 	
-	brick.model.setValue(finalValue);
+	brick.setValue(finalValue);
 }
 
 module.exports = {
 	id: 'function',
 	loader: function(setup, config) {
-		setup.import(mw.bricks.nested);
 		setup.import(mw.bricks.jqGeneric);
+		setup.import(mw.bricks.nested);
 
 		let def = mw.functions.getDefinition(config.id, config.namespace);
 
 		if(def.paramSet.type === 'array') {
-			setup.extend(function() {
-				return {
-					model: {
-						getCardinality: function() { return def.paramSet.cardinality; },
-						getMinRequired: function() { return def.paramSet.minRequired; },
-					}
-				}	
+			setup.extend({
+				getCardinality: function() { return def.paramSet.cardinality; },
+				getMinRequired: function() { return def.paramSet.minRequired; }
 			});
 		}
 		else if(def.paramSet.type === 'map') {
 			let childsSet = new Set();
 
-			setup.extend(function() {
-				return {
-					model: {
-						getArgs: function() { return def.paramSet.args; },
-						getChildsAsSet: function() {
-							return new Set(childsSet);
-						},
-						getValidValuesAsMap: function() {
-							let res = {};
+			setup.extend({
+				getArgs: function() { return def.paramSet.args; },
+				getChildsAsSet: function() {
+					return new Set(childsSet);
+				},
+				getValidValuesAsMap: function() {
+					let res = {};
 
-							childsSet.forEach(function(childBrick) {
-								if(childBrick.model.getValue())
-									res[childBrick.model.getName()] = childBrick.model.getValue();
-							});
+					childsSet.forEach(function(childBrick) {
+						if(childBrick.getValue())
+							res[childBrick.getName()] = childBrick.getValue();
+					});
 
-							return res;
-						}
-					}
-				}
-						
+					return res;
+				}						
 			});
 
-			setup.on('childAdded', function(brick, childBrick) {
+			setup.on('onChildAdded', function(childBrick) {
 				childsSet.add(childBrick);
+				childBrick.getNameContainer().css('display', '');
 			});
 
-			setup.on('childDisposed', function(brick, childBrick) {
+			setup.on('onChildDisposed', function(childBrick) {
 				childsSet.delete(childBrick);
 			});
 		}
@@ -78,26 +70,23 @@ module.exports = {
 			throw new Error('Function type not supported: ' + def.paramSet.type);
 		}
 
-		setup.on('childSetModified', function(brick) {
-			updateFunction(brick);
+		setup.on('onChildSetModified', function() {
+			updateFunction(this);
 		});
 
-		setup.extend(function() {
-			return {
-				model: {
-					getParamsType: function() { 
-						return def.paramSet.type;
-					},
-					resolver: def.paramSet.resolver
-				}
-			}	
+		setup.extend({
+			getParamsType: function() { 
+				return def.paramSet.type;
+			},
+			getResolver: function() {
+				return def.paramSet.resolver;
+			}
 		});
 
 		setup.configure(function(brick) {
 			let content = $(`<div class="brick funcName">${config.id}</div>`);
-
-			brick.view.getContent().append(content);
-			brick.view.setFocusElem(content);
+			brick.getContent().append(content);
+			brick.getValueContainer().css('display', '');
 
 			/*brick.view.getChildrenContainer().
 				addClass('noChilds').

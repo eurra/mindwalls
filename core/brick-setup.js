@@ -1,6 +1,6 @@
 let mw = require('./mindwalls.js');
 
-function resetAPI(targetAPI, baseAPI, baseEvents) {
+function resetAPI(targetAPI, baseAPI, baseEvents, loaded) {
 	for(let member in targetAPI)
 		delete targetAPI[member];
 
@@ -8,6 +8,9 @@ function resetAPI(targetAPI, baseAPI, baseEvents) {
 
 	for(let member in baseEvents)
 		targetAPI[member] = baseEvents[member].clone();
+
+	loaded.clear();
+	targetAPI.setValue(null);
 
 	return targetAPI;
 }
@@ -18,7 +21,7 @@ function loadModule(brickModule, config, loaded, extendObjects, configHandlers, 
 
 	let setup = {
 		import: function(importModule) {
-			loadModule(importModule, config, loaded, extendObjects, configHandlers);
+			loadModule(importModule, config, loaded, extendObjects, configHandlers, targetAPI);
 		},
 		addEvents: function(events) {
 			let toExtend = {};
@@ -49,13 +52,15 @@ function createBrick() {
 	let parent = null;
 	let value = null;
 	let name = null;
+	let view = $('<div>');
 
 	let loaded = new Set();
 	let targetAPI = {};
 
 	let baseAPI = {
 		dispose: function() {
-			this.onDisposed.call();
+			view.remove();
+			this.onDisposed.call();			
 
 			if(parent != null) {
 				parent.onChildDisposed.call(this);
@@ -108,7 +113,9 @@ function createBrick() {
 			if(!this.instanceOf(type))
 				throw new Error(`Brick type validation failed: '${type}'`);
 		},
-		
+		getView: function() {
+			return view;
+		}
 	};
 
 	let baseEvents = {
@@ -120,11 +127,14 @@ function createBrick() {
 		onValueSet: mw.events.create(targetAPI),
 		onChildValueSet: mw.events.create(targetAPI),
 		onNameSet: mw.events.create(targetAPI),
-		onChildNameSet: mw.events.create(targetAPI)
+		onChildNameSet: mw.events.create(targetAPI),
+		onReset: mw.events.create(targetAPI)
 	};
 
 	baseAPI._reset = function() {
-		resetAPI(targetAPI, baseAPI, baseEvents);
+		resetAPI(targetAPI, baseAPI, baseEvents, loaded);
+		view.empty();
+		this.onReset.call();
 	};
 
 	baseAPI._import = function(brickModule, config = {}) {
@@ -142,7 +152,7 @@ function createBrick() {
 			configHandlers[i](targetAPI);
 	};
 
-	return resetAPI(targetAPI, baseAPI, baseEvents);
+	return resetAPI(targetAPI, baseAPI, baseEvents, loaded);
 }
 
 module.exports = {
