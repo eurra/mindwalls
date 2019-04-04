@@ -76,8 +76,8 @@ $(function() {
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);
 
-	let meta = mw.import.from([ { module: mw.bricks.meta } ])[0];
-	let walls = mw.import.from(examples);
+	let meta = mw.import.newBrick({ module: mw.bricks.meta });
+	let walls = mw.import.walls(examples, meta);
 	meta.addWalls(walls);	
 	mw.generalUI.setMeta(meta);
 });

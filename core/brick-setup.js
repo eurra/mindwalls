@@ -134,7 +134,7 @@ function createBrick() {
 	baseAPI._reset = function() {
 		resetAPI(targetAPI, baseAPI, baseEvents, loaded);
 		view.empty();
-		this.onReset.call();
+		this.onReset.call();		
 	};
 
 	baseAPI._import = function(brickModule, config = {}) {
@@ -150,6 +150,9 @@ function createBrick() {
 		// Configure brick
 		for(let i = 0; i < configHandlers.length; i++)
 			configHandlers[i](targetAPI);
+
+		this.setName(config.name ? config.name : null);
+		this.setValue(config.value ? config.value : null);
 	};
 
 	return resetAPI(targetAPI, baseAPI, baseEvents, loaded);
