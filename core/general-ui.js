@@ -36,6 +36,7 @@ module.exports = {
 		}
 
 		$(`<input style="width: 95%;" type="text" placeholder="${config.placeholder}"/>`).
+			val(config.defaultValue ? config.defaultValue : '').
 			appendTo(inputDialog).
 			keypress(function(e) {
 				if(e.which === 13) {

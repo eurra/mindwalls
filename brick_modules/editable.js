@@ -1,5 +1,7 @@
 let mw = require('../core/mindwalls.js');
 
+let editConfigs = [];
+
 mw.actions.register([
 	{
 		// F2 - edit
@@ -11,14 +13,23 @@ mw.actions.register([
 				let config = {
 					title: 'Edit brick',
 					placeholder: 'Enter text for edit the brick',
-					relativeTo: activeBrick.getView(),
+					relativeTo: activeBrick.getView(),					
 					handle: function(textVal) {
-						activeBrick.onEditFinish.call(textVal);
+						for(let i = 0; i < editConfigs.length; i++) {
+							let parsedCfg = editConfigs[i].parse.apply(activeBrick, [ textVal ]);							
+
+							if(parsedCfg) {
+								activeBrick._reset();
+								activeBrick._import(parsedCfg.module, parsedCfg);
+							}
+						}
 					}
 				};
 
-				if(activeBrick.getEditableTextHandler())
-					config.text = activeBrick.getEditableTextHandler()(activeBrick);
+				let defVal = activeBrick.getEditableTextHandler().apply(activeBrick);
+
+				if(defVal)
+					config.defaultValue = defVal;
 
 				mw.generalUI.showInputDialog(config);
 			}
@@ -29,11 +40,9 @@ mw.actions.register([
 module.exports = {
 	id: 'editable',
 	loader: function(setup) {
-		let editableTextHander = function(brick) {
-			return brick.getValue();
+		let editableTextHander = function() {
+			return this.getValue();
 		};
-
-		setup.addEvents(['onEditFinish']);
 
 		setup.extend({
 			setEditableTextHandler: function(handler) {
@@ -43,5 +52,9 @@ module.exports = {
 				return editableTextHander;
 			}
 		});
+	},
+	registerConfig: function(config) {
+		if(config)
+			editConfigs.push(config);
 	}
 };

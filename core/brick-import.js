@@ -8,29 +8,25 @@ function extractSimpleConfig(cfg) {
 	return newCfg;
 }
 
-function importBricks(brickConfig, parent = null) {
-	let newBrick = mw.setup.createBrick();
-	newBrick._import(brickConfig.module, extractSimpleConfig(brickConfig));
-
-	newBrick.setParent(parent);
-	newBrick.setName(brickConfig.name ? brickConfig.name : null);
-	newBrick.setValue(brickConfig.value ? brickConfig.value : null);
+function importBrick(brick, brickConfig, parent = null) {
+	brick._import(brickConfig.module, extractSimpleConfig(brickConfig));
+	brick.setParent(parent);	
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {
-			importBricks(brickConfig.childs[i], newBrick);
+			importBrick(mw.setup.createBrick(), brickConfig.childs[i], brick);
 		}
 	}
 
-	return newBrick;
+	return brick;
 }
 
-function importWalls(wallsData) {
+function importWalls(wallsData, meta = null) {
 	let walls = [];
 
 	for(let i in wallsData) {
 		let wallConfig = wallsData[i];		
-		let wall = importBricks(wallConfig);
+		let wall = importBrick(mw.setup.createBrick(), wallConfig, meta);
 		walls.push(wall);
 	}
 
@@ -38,6 +34,9 @@ function importWalls(wallsData) {
 }
 
 module.exports = {	
-	from: importWalls,
-	fromConfig: importBricks
+	walls: importWalls,
+	brick: importBrick,
+	newBrick: function(brickConfig) {
+		return importBrick(mw.setup.createBrick(), brickConfig);
+	}
 };

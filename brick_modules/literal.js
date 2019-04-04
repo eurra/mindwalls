@@ -1,19 +1,12 @@
 let mw = require('../core/mindwalls.js');
 
-module.exports = {
+let brickModule = {
 	id: 'literal',
 	loader: function(setup) {	
 		setup.import(mw.bricks.jqGeneric);
 		setup.import(mw.bricks.editable);
 
 		let valueContainer = $('<div class="brick data"></div>');
-
-		setup.on('onEditFinish', function(text) {
-			if(!isNaN(text))
-				text = Number(text);
-
-			this.setValue(text);
-		});
 
 		setup.configure(function(brick) {			
 			brick.getContent().append(valueContainer);
@@ -26,3 +19,17 @@ module.exports = {
 		})
 	}
 };
+
+mw.bricks.editable.registerConfig({
+	parse: function(text) {
+		if(!isNaN(text))
+			text = Number(text);
+
+		return {
+			module: brickModule,
+			value: text
+		};
+	}
+});
+
+module.exports = brickModule;
