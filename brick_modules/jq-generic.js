@@ -17,11 +17,7 @@ module.exports = {
 				append(valueCont).
 				append(content).
 				append(childrenCont);
-		});
-
-		setup.on('onChildAdded', function(childBrick) {			
-			this.getChildrenContainer().append(childBrick.getView());
-		});
+		});		
 
 		setup.on('onValueSet', function() {
 			let val = this.getValue();		

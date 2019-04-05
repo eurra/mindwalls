@@ -14,7 +14,7 @@ function importBrick(brick, brickConfig, parent = null) {
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {
-			importBrick(mw.setup.createBrick(), brickConfig.childs[i], brick);
+			importBrick(mw.bricks.proto.create(), brickConfig.childs[i], brick);
 		}
 	}
 
@@ -26,7 +26,7 @@ function importWalls(wallsData, meta = null) {
 
 	for(let i in wallsData) {
 		let wallConfig = wallsData[i];		
-		let wall = importBrick(mw.setup.createBrick(), wallConfig, meta);
+		let wall = importBrick(mw.bricks.proto.create(), wallConfig, meta);
 		walls.push(wall);
 	}
 
@@ -37,6 +37,6 @@ module.exports = {
 	walls: importWalls,
 	brick: importBrick,
 	newBrick: function(brickConfig) {
-		return importBrick(mw.setup.createBrick(), brickConfig);
+		return importBrick(mw.bricks.proto.create(), brickConfig);
 	}
 };
