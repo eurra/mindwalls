@@ -1,13 +1,16 @@
 let mw = require('./mindwalls.js');
+let EventHandler = mw.events;
 
-function initAPI(brickAPI, protoAPI, protoEvents, loaded) {
+function initAPI(brickAPI, protoAPI, loaded) {
 	for(let member in brickAPI)
 		delete brickAPI[member];
 
-	Object.assign(brickAPI, protoAPI);
-
-	for(let member in protoEvents)
-		brickAPI[member] = protoEvents[member].clone();
+	for(let member in protoAPI) {
+		if(protoAPI[member] instanceof EventHandler)
+			brickAPI[member] = protoAPI[member].clone();
+		else
+			brickAPI[member] = protoAPI[member];
+	}
 
 	loaded.clear();
 	brickAPI.setValue(null);
@@ -272,15 +275,7 @@ function createBrick(terminal = false) {
 	let view = $('<div>');
 
 	let loaded = new Set();
-	let brickAPI = {};	
-
-	let protoEvents = {		
-		onParentSet: mw.events.create(brickAPI),
-		onDisposed: mw.events.create(brickAPI),
-		onValueSet: mw.events.create(brickAPI),
-		onNameSet: mw.events.create(brickAPI),
-		onReset: mw.events.create(brickAPI)
-	};	
+	let brickAPI = {};
 
 	let protoAPI = {
 		getParent: function() {
@@ -293,7 +288,7 @@ function createBrick(terminal = false) {
 			this.onParentSet.call();
 		},
 		dispose: function() {
-			//view.remove();
+			view.remove();
 			this.onDisposed.call();			
 
 			if(parent != null) {
@@ -339,19 +334,24 @@ function createBrick(terminal = false) {
 			return view;
 		},
 		_reset: function() {
-			initAPI(brickAPI, protoAPI, protoEvents, loaded);
-			//view.empty();
+			initAPI(brickAPI, protoAPI, loaded);
+			view.empty();
 			this.onReset.call();		
 		},
 		_import: function(brickModule, config) {
 			importModule(brickModule, loaded, brickAPI, brickAPI, config);
-		}
+		},
+		onParentSet: new EventHandler(brickAPI),
+		onDisposed: new EventHandler(brickAPI),
+		onValueSet: new EventHandler(brickAPI),
+		onNameSet: new EventHandler(brickAPI),
+		onReset: new EventHandler(brickAPI)
 	};
 
 	if(!terminal)
 		importModule(nestedModule, loaded, protoAPI, brickAPI);
 
-	return initAPI(brickAPI, protoAPI, protoEvents, loaded);
+	return initAPI(brickAPI, protoAPI, loaded);
 }
 
 module.exports = {

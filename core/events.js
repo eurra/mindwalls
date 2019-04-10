@@ -1,28 +1,27 @@
 
-function createEventHandler(target, handlers) {
-	let finalTarget = target;
+class EventHandler {
+	constructor(target, handlers = []) {
+		this.finalTarget = target;
+		this.handlers = handlers;
 
-	let trigger = function() {
-		for(let i = 0; i < handlers.length; i++) {			
-			handlers[i].apply(finalTarget, arguments);
-		}
-	};
+		this.trigger = function() {
+			for(let i = 0; i < handlers.length; i++) {			
+				handlers[i].apply(this.finalTarget, arguments);
+			}
+		};
+	}
 
-	return {
-		add: function(handler) {
-			handlers.push(handler);
-		},
-		call: function() {
-			trigger.apply(finalTarget, arguments);
-		},
-		clone: function() {
-			return createEventHandler(finalTarget, handlers.slice(0));
-		}
-	};
-}
+	add(handler) {
+		this.handlers.push(handler);
+	}
 
-module.exports = {
-	create: function(target) {		
-		return createEventHandler(target, []);
+	call() {
+		this.trigger.apply(this.finalTarget, arguments);
+	}
+
+	clone() {
+		return new EventHandler(this.finalTarget, this.handlers.slice(0));
 	}
 }
+
+module.exports = EventHandler;
