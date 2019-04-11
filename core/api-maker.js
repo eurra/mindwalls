@@ -6,7 +6,8 @@ module.exports = function() {
 	let savedModules = new Set();
 
 	function loadModule(apiModule, config, newLoadedModules, 
-						newMethods, newEvents, newEventHandlers, configHandlers) {
+						newMethods, newEvents, newEventHandlers, configHandlers,
+						requiredActions) {
 
 		if(newLoadedModules.has(apiModule.id))
 			throw new Error(`API module already loaded: '${apiModule.id}'`);
@@ -20,7 +21,8 @@ module.exports = function() {
 					newMethods, 
 					newEvents, 
 					newEventHandlers, 
-					configHandlers
+					configHandlers,
+					requiredActions
 				);
 			},
 			addEvents: function(events) {
@@ -74,7 +76,13 @@ module.exports = function() {
 			},
 			configure: function(configHandler) {
 				configHandlers.push(configHandler);
-			}			
+			},
+			require: function(apiId, action) {
+				requiredActions.push(() => {
+					if(newLoadedModules.has(apiId))
+						action();
+				});
+			}
 		};
 
 		apiModule.loader(setup, config);
@@ -87,8 +95,13 @@ module.exports = function() {
 		let newEventHandlers = [];		
 		let newLoadedModules = new Set(loadedModules);
 		let configHandlers = [];
+		let requiredActions = [];
 
-		loadModule(apiModule, config, newLoadedModules, newMethods, newEvents, newEventHandlers, configHandlers);
+		loadModule(apiModule, config, newLoadedModules, newMethods, newEvents, newEventHandlers, configHandlers, requiredActions);
+
+		for(let i = 0; i < requiredActions.length; i++)
+			requiredActions[i]();
+
 		let extendedAPI = Object.assign({}, publicAPI);
 		let extendedMembers = new Map(members);
 
@@ -130,7 +143,6 @@ module.exports = function() {
 			let newEventHandler = newEventHandlers[i];
 
 			if(!extendedMembers.has(newEventHandler.name)) {
-				console.log(newLoadedModules);
 				console.log(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': no event has been loaded with such identifier`);
 			}
 			else {

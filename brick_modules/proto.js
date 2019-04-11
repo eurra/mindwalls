@@ -147,7 +147,6 @@ let nestedModule = {
 		]);
 
 		function handleChildAdded(brick, childNode) {
-			console.log('cccccccccc');
 			brick.onChildAdded(
 				childNode.brick, 
 				childNode.prev ? childNode.prev.brick : null,

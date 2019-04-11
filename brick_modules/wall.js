@@ -23,23 +23,24 @@ module.exports = {
 				});
 		});
 
-		setup.on('onChildAdded', function(childBrick) {
-			mainBrick = childBrick;
-		});
+		setup.require('nested', () => {
+			setup.on('onChildAdded', function(childBrick) {
+				mainBrick = childBrick;
+			});
 
-		setup.on('onChildValueSet', function(childBrick) {
-			this.setValue(childBrick.getValue());
-		});
+			setup.on('onChildValueSet', function(childBrick) {
+				this.setValue(childBrick.getValue());
+			});
 
-		setup.extend(function(){
-			return {
-				model: {
-					getMainBrick: function() {
-						return mainBrick;
+			setup.extend(function(){
+				return {
+					model: {
+						getMainBrick: function() {
+							return mainBrick;
+						}
 					}
-				}
-			};
-		})
-
+				};
+			});
+		});
 	}
 };

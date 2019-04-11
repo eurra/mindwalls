@@ -27,7 +27,6 @@ module.exports = {
 	id: 'function',
 	loader: function(setup, config) {
 		setup.import(mw.bricks.jqGeneric);
-		setup.import(mw.bricks.nested);
 
 		let def = mw.functions.getDefinition(config.id, config.namespace);
 

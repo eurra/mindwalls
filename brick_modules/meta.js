@@ -228,7 +228,6 @@ module.exports = {
 		});
 
 		setup.on('onChildAdded', function(childBrick) {
-			console.log('bbbbbbbbbbbb');
 			this.getView().append(childBrick.getView());
 		});
 

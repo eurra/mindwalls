@@ -13,7 +13,10 @@ function importBrick(brickConfig, parent = null) {
 	brick.load(brickConfig.module, extractSimpleConfig(brickConfig));
 
 	if(parent != null)
-		parent.addChild(brick);	
+		parent.addChild(brick);
+
+	brick.setName(brickConfig.name ? brickConfig.name : null);
+	brick.setValue(brickConfig.value ? brickConfig.value : null);
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {
