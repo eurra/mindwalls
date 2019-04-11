@@ -1,7 +1,8 @@
 let mw = require('../core/mindwalls');
+//let apiMaker = require('../core/api-maker');
 
 $(function() {
-	let examples = [
+	/*let examples = [
 		{
 			module: mw.bricks.wall, childs: [{
 				module: mw.bricks.function, id: '<', childs: [
@@ -59,9 +60,9 @@ $(function() {
 		{ 
 			module: mw.bricks.wall 
 		}
-	];
+	];*/
 
-	/*let examples = [
+	let examples = [
 		{
 			module: mw.bricks.wall, childs: [
 				{ module: mw.bricks.literal, value: 133 },
@@ -69,15 +70,51 @@ $(function() {
 			]
 		},
 		{ 
-			module: mw.bricks.wall 
+			module: mw.bricks.wall, childs: []
 		}
-	];*/
+	];
 
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);
 
-	let meta = mw.import.newBrick({ module: mw.bricks.meta });
+	let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: true });
 	let walls = mw.import.walls(examples, meta);
 	meta.addWalls(walls);	
 	mw.generalUI.setMeta(meta);
+
+	/*let test = apiMaker();
+
+	test.load({
+		id: 'module1',
+		loader: function(setup) {
+			setup.extend({
+				test1: function(a) {
+					console.log(a);
+				},
+				test2: function(a) {
+					this.test1(a);
+				}
+			});
+		}
+	});
+
+	test.save();
+
+	test.load({
+		id: 'module2',
+		loader: function(setup) {
+			setup.extend({
+				test1: function() {
+					console.log('hola');
+				}
+			});
+
+			setup.on('onBeforeUnload', function() {
+				console.log('unloading!');
+			});
+		}
+	});
+
+	global.test = test;
+	console.log(test);*/
 });

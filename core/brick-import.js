@@ -8,13 +8,16 @@ function extractSimpleConfig(cfg) {
 	return newCfg;
 }
 
-function importBrick(brick, brickConfig, parent = null) {
-	brick._import(brickConfig.module, extractSimpleConfig(brickConfig));
-	brick.setParent(parent);	
+function importBrick(brickConfig, parent = null) {
+	let brick = mw.bricks.proto.create(brickConfig.childs ? false : true);
+	brick.load(brickConfig.module, extractSimpleConfig(brickConfig));
+
+	if(parent != null)
+		parent.addChild(brick);	
 
 	if(brickConfig.childs && brickConfig.childs.length > 0) {
 		for(let i in brickConfig.childs) {
-			importBrick(mw.bricks.proto.create(), brickConfig.childs[i], brick);
+			importBrick(brickConfig.childs[i], brick);
 		}
 	}
 
@@ -26,7 +29,7 @@ function importWalls(wallsData, meta = null) {
 
 	for(let i in wallsData) {
 		let wallConfig = wallsData[i];		
-		let wall = importBrick(mw.bricks.proto.create(), wallConfig, meta);
+		let wall = importBrick(wallConfig, meta);
 		walls.push(wall);
 	}
 
@@ -37,6 +40,6 @@ module.exports = {
 	walls: importWalls,
 	brick: importBrick,
 	newBrick: function(brickConfig) {
-		return importBrick(mw.bricks.proto.create(), brickConfig);
+		return importBrick(brickConfig);
 	}
 };

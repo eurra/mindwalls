@@ -1,5 +1,5 @@
-let mw = require('./mindwalls.js');
-let EventHandler = mw.events;
+//let mw = require('./mindwalls.js');
+/*let EventHandler = mw.events;
 
 function initAPI(brickAPI, protoAPI, loaded) {
 	for(let member in brickAPI)
@@ -67,6 +67,70 @@ function importModule(brickModule, loaded, target, brickAPI, config = {}) {
 
 	this.setName(config.name ? config.name : null);
 	this.setValue(config.value ? config.value : null);
+}*/
+
+let baseModule = {
+	id: 'base',
+	loader: function(setup) {
+		let value = null;
+		let name = null;
+		let parent = null;
+		let view = $('<div>');
+
+		setup.addEvents([
+			'onParentSet', 'onDisposed',
+			'onValueSet', 'onNameSet', 
+		]);
+
+		setup.extend({
+			getParent: function() {
+				return parent;
+			},
+			setParent: function(parentBrick) {
+				if(parentBrick != null)
+					parentBrick.mustBe('nested');
+
+				parent = parentBrick;
+				this.onParentSet();
+			},
+			dispose: function() {
+				view.remove();
+				this.onDisposed();			
+
+				if(parent != null) {
+					parent.onChildDisposed(this);
+					parent.onChildSetModified(this);
+				}
+			},	
+			getValue: function() {
+				return value;
+			},
+			setValue: function(v) {
+				value = v;
+				this.onValueSet();
+
+				if(parent != null) {
+					parent.onChildValueSet(this);
+					parent.onChildSetModified(this);
+				}
+			},
+			getName: function() {
+				return name;
+			},
+			setName: function(n) {
+				name = n;
+				this.onNameSet();
+
+				if(parent != null) {
+					parent.onChildNameSet(this);
+					parent.onChildSetModified(this);
+				}
+			},
+			getView: function() {
+				return view;
+			}
+		});
+	}
 }
 
 let nestedModule = {
@@ -83,8 +147,14 @@ let nestedModule = {
 		]);
 
 		function handleChildAdded(brick, childNode) {
-			this.onChildAdded.call(childNode.brick, childNode.prev.node, childNode.next.node);
-			childNode.setParent(brick);
+			console.log('cccccccccc');
+			brick.onChildAdded(
+				childNode.brick, 
+				childNode.prev ? childNode.prev.brick : null,
+				childNode.next ? childNode.next.brick : null
+			);
+
+			childNode.brick.setParent(brick);
 		}
 
 		function createNodeFor(child) {
@@ -268,7 +338,7 @@ let nestedModule = {
 	}
 };
 
-function createBrick(terminal = false) {	
+/*function createBrick(terminal = false) {	
 	let value = null;
 	let name = null;
 	let parent = null;
@@ -352,6 +422,19 @@ function createBrick(terminal = false) {
 		importModule(nestedModule, loaded, protoAPI, brickAPI);
 
 	return initAPI(brickAPI, protoAPI, loaded);
+}*/
+
+let apiMaker = require('../core/api-maker.js');
+
+function createBrick(terminal = false) {
+	let newBrick = apiMaker();
+	newBrick.load(baseModule);
+
+	if(!terminal)
+		newBrick.load(nestedModule);
+
+	newBrick.save();
+	return newBrick;
 }
 
 module.exports = {

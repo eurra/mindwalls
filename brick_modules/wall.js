@@ -4,7 +4,6 @@ module.exports = {
 	id: 'wall',
 	loader: function(setup) {
 		setup.import(mw.bricks.jqGeneric);
-		setup.import(mw.bricks.nested);
 
 		let mainBrick = null;
 		let emptySpan = $('<span>(empty)</span>');

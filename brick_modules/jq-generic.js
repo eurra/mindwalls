@@ -17,7 +17,17 @@ module.exports = {
 				append(valueCont).
 				append(content).
 				append(childrenCont);
-		});		
+		});
+
+		setup.on('onChildAdded', function(added, prev, next) {
+			console.log('aaaa');
+			if(prev)
+				prev.getView().next(added.getView());
+			else if(next)
+				next.getView().prev(added.getView());
+			else
+				childrenCont.append(added.getView());
+		});
 
 		setup.on('onValueSet', function() {
 			let val = this.getValue();		

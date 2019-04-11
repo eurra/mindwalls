@@ -27,8 +27,6 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'meta',
 	loader: function(setup) {
-		setup.import(mw.bricks.nested);
-
 		let activeWall = null;
 		let activeBricksMap = new Map();		
 
@@ -78,7 +76,8 @@ module.exports = {
 
 				for(let i = 0; i < toAdd.length; i++) {
 					toAdd[i].mustBe('wall');
-					toAdd[i].setParent(this);
+					this.addChild(toAdd[i]);
+					//toAdd[i].setParent(this);
 
 					if(wallToActivate == null)
 						wallToActivate = toAdd[i];
@@ -228,7 +227,8 @@ module.exports = {
 			}
 		});
 
-		setup.on('onChildAdded', function(childBrick) {			
+		setup.on('onChildAdded', function(childBrick) {
+			console.log('bbbbbbbbbbbb');
 			this.getView().append(childBrick.getView());
 		});
 
