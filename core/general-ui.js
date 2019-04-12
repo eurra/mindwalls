@@ -184,10 +184,8 @@ mw.actions.register([
 			let currBrick = metaBrick.getActiveBrick();
 
 			if(currBrick != null) {
-				//metaBrick.moveToClosestBrick();				
-				//currBrick.dispose();
-				currBrick._reset();
-				currBrick._import(mw.bricks.empty);
+				metaBrick.moveToClosestBrick();				
+				currBrick.dispose();
 			}
 		}
 	}

@@ -143,7 +143,7 @@ module.exports = function() {
 			let newEventHandler = newEventHandlers[i];
 
 			if(!extendedMembers.has(newEventHandler.name)) {
-				console.log(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': no event has been loaded with such identifier`);
+				throw new Error(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': no event has been loaded with such identifier`);
 			}
 			else {
 				let currMember = extendedMembers.get(newEventHandler.name);
@@ -208,7 +208,7 @@ module.exports = function() {
 				},
 				mustBe: function(type) {
 					if(!this.instanceOf(type))
-						throw new Error(`Brick type validation failed: '${type}'`);
+						throw new Error(`Type validation failed: '${type}'`);
 				}
 			});
 		}

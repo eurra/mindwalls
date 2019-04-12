@@ -44,8 +44,7 @@ mw.actions.register([
 			}
 
 			let brickHandler = function(newBrick) {
-				newBrick.setParent()
-				activeBrick.getParent()
+				activeBrick.getParent().addChildAfter(newBrick, activeBrick);
 			}
 
 			let combo = $('<select size="1"><option disabled selected value>select...</option></select>').				

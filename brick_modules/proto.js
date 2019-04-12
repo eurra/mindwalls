@@ -1,86 +1,19 @@
-//let mw = require('./mindwalls.js');
-/*let EventHandler = mw.events;
-
-function initAPI(brickAPI, protoAPI, loaded) {
-	for(let member in brickAPI)
-		delete brickAPI[member];
-
-	for(let member in protoAPI) {
-		if(protoAPI[member] instanceof EventHandler)
-			brickAPI[member] = protoAPI[member].clone();
-		else
-			brickAPI[member] = protoAPI[member];
-	}
-
-	loaded.clear();
-	brickAPI.setValue(null);
-
-	return brickAPI;
-}
-
-function loadModule(brickModule, config, loaded, extendObjects, configHandlers, brickAPI) {
-	if(loaded.has(brickModule.id))
-		throw new Error(`Brick module already loaded: '${brickModule.id}'`);
-
-	let setup = {
-		import: function(importModule) {
-			loadModule(importModule, config, loaded, extendObjects, configHandlers, brickAPI);
-		},
-		addEvents: function(events) {
-			let toExtend = {};
-
-			for(let i = 0; i < events.length; i++)
-				toExtend[events[i]] = mw.events.create(brickAPI);
-
-			this.extend(toExtend);
-		},
-		on: function(eventName, eventHandler) {
-			this.configure(function(brick) {	
-				brick[eventName].add(eventHandler);
-			});
-		},
-		extend: function(extendObj) {
-			extendObjects.push(extendObj);
-		},
-		configure: function(configHandler) {
-			configHandlers.push(configHandler);
-		}			
-	};
-
-	brickModule.loader(setup, config);
-	loaded.add(brickModule.id);
-}
-
-function importModule(brickModule, loaded, target, brickAPI, config = {}) {
-	let extendObjects = [];
-	let configHandlers = [];
-
-	loadModule(brickModule, config, loaded, extendObjects, configHandlers, brickAPI);
-
-	// Extend brick
-	for(let i = 0; i < extendObjects.length; i++) 
-		Object.assign(target, extendObjects[i]);
-
-	// Configure brick
-	for(let i = 0; i < configHandlers.length; i++)
-		configHandlers[i](target);
-
-	this.setName(config.name ? config.name : null);
-	this.setValue(config.value ? config.value : null);
-}*/
-
 let baseModule = {
 	id: 'base',
 	loader: function(setup) {
 		let value = null;
 		let name = null;
-		let parent = null;
-		let view = $('<div>');
+		let parent = null;		
 
 		setup.addEvents([
 			'onParentSet', 'onDisposed',
 			'onValueSet', 'onNameSet', 
 		]);
+
+		setup.on('onBeforeUnload', function() {
+			this.setValue(null);
+			this.getView().empty();
+		});
 
 		setup.extend({
 			getParent: function() {
@@ -94,7 +27,6 @@ let baseModule = {
 				this.onParentSet();
 			},
 			dispose: function() {
-				view.remove();
 				this.onDisposed();			
 
 				if(parent != null) {
@@ -125,13 +57,10 @@ let baseModule = {
 					parent.onChildNameSet(this);
 					parent.onChildSetModified(this);
 				}
-			},
-			getView: function() {
-				return view;
 			}
 		});
 	}
-}
+};
 
 let nestedModule = {
 	id: 'nested',
@@ -154,6 +83,7 @@ let nestedModule = {
 			);
 
 			childNode.brick.setParent(brick);
+			brick.onChildSetModified(childNode);
 		}
 
 		function createNodeFor(child) {
@@ -337,100 +267,57 @@ let nestedModule = {
 	}
 };
 
-/*function createBrick(terminal = false) {	
-	let value = null;
-	let name = null;
-	let parent = null;
-	let view = $('<div>');
+let viewModule = {
+	id: 'jq-base',
+	loader: function(setup) {
+		let view = $('<div>');
+		let content = $('<div>');
 
-	let loaded = new Set();
-	let brickAPI = {};
+		setup.extend({
+			getView: function() {
+				return view;
+			},
+			getContent: function() {
+				return content;
+			}
+		});
 
-	let protoAPI = {
-		getParent: function() {
-			return parent;
-		},
-		setParent: function(parentBrick) {
-			parentBrick.mustBe('nested');
-			parent = parentBrick;
-
-			this.onParentSet.call();
-		},
-		dispose: function() {
+		setup.on('onDisposed', function() {
 			view.remove();
-			this.onDisposed.call();			
+		});
 
-			if(parent != null) {
-				parent.onChildDisposed.call(this);
-				parent.onChildSetModified.call(this);
-			}
-		},	
-		getValue: function() {
-			return value;
-		},
-		setValue: function(v) {
-			value = v;
-			this.onValueSet.call();
-
-			if(parent != null) {
-				parent.onChildValueSet.call(this);
-				parent.onChildSetModified.call(this);
-			}
-		},
-		getName: function() {
-			return name;
-		},
-		setName: function(n) {
-			name = n;
-			this.onNameSet.call();
-
-			if(parent != null) {
-				parent.onChildNameSet.call(this);
-				parent.onChildSetModified.call(this);
-			}
-		},
-		instanceOf: function(type) {
-			return loaded.has(type);
-		},
-		getTypes: function() {
-			return Array.from(loaded);
-		},
-		mustBe: function(type) {
-			if(!this.instanceOf(type))
-				throw new Error(`Brick type validation failed: '${type}'`);
-		},
-		getView: function() {
-			return view;
-		},
-		_reset: function() {
-			initAPI(brickAPI, protoAPI, loaded);
+		setup.on('onBeforeUnload', function() {
 			view.empty();
-			this.onReset.call();		
-		},
-		_import: function(brickModule, config) {
-			importModule(brickModule, loaded, brickAPI, brickAPI, config);
-		},
-		onParentSet: new EventHandler(brickAPI),
-		onDisposed: new EventHandler(brickAPI),
-		onValueSet: new EventHandler(brickAPI),
-		onNameSet: new EventHandler(brickAPI),
-		onReset: new EventHandler(brickAPI)
-	};
+			content.empty();
+		});
+	}
+};
 
-	if(!terminal)
-		importModule(nestedModule, loaded, protoAPI, brickAPI);
+let nestedViewModule = {
+	id: 'jq-nested',
+	loader: function(setup) {
+		let childrenCont = $('<div>');
 
-	return initAPI(brickAPI, protoAPI, loaded);
-}*/
+		setup.extend({
+			getChildrenContainer: function() {
+				return childrenCont;
+			}
+		});
+	}
+}
 
 let apiMaker = require('../core/api-maker.js');
 
 function createBrick(terminal = false) {
 	let newBrick = apiMaker();
-	newBrick.load(baseModule);
 
-	if(!terminal)
+	newBrick.load(baseModule);
+	newBrick.load(viewModule);
+
+	if(!terminal) {
 		newBrick.load(nestedModule);
+		newBrick.load(nestedViewModule);
+	}
 
 	newBrick.save();
 	return newBrick;

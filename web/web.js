@@ -58,7 +58,7 @@ $(function() {
 			}]
 		},
 		{ 
-			module: mw.bricks.wall 
+			module: mw.bricks.wall, childs: [] 
 		}
 	];
 

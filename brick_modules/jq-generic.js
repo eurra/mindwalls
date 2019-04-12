@@ -1,5 +1,3 @@
-let mw = require('../core/mindwalls.js');
-
 module.exports = {
 	id: 'jq-generic',
 	loader: function(setup) {
@@ -7,16 +5,17 @@ module.exports = {
 		let nameCont = $('<div class="horizontal"></div>').append(nameLabel).css('display', 'none');
 		let valueLabel = $('<div class="brick result"></div>');
 		let valueCont = $('<div class="horizontal"></div>').append(valueLabel).css('display', 'none');
-		let content = $('<div class="horizontal wide"></div>');
-		let childrenCont = $('<div class="vertical"></div>');
 
 		setup.configure(function(brick) {
 			brick.getView().
 				addClass('horizontal').
 				append(nameCont).
 				append(valueCont).
-				append(content).
-				append(childrenCont);
+				append(brick.getContent().addClass('horizontal wide'));
+
+			if(brick.instanceOf('nested')) {
+				brick.getView().append(brick.getChildrenContainer().addClass('vertical'));
+			}
 		});
 
 		setup.require('nested', () => {
@@ -26,7 +25,7 @@ module.exports = {
 				else if(next)
 					added.getView().insertBefore(next.getView());
 				else
-					childrenCont.append(added.getView());
+					this.getChildrenContainer().append(added.getView());
 			});
 		});
 
@@ -52,12 +51,6 @@ module.exports = {
 		});
 
 		setup.extend({
-			getContent: function() {
-				return content;
-			},
-			getChildrenContainer: function() {
-				return childrenCont;
-			},
 			getValueContainer: function() {
 				return valueCont;
 			},

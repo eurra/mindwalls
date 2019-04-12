@@ -4,6 +4,7 @@ let brickModule = {
 	id: 'literal',
 	loader: function(setup) {	
 		setup.import(mw.bricks.jqGeneric);
+		setup.import(mw.bricks.wallMember);
 
 		let valueContainer = $('<div class="brick data"></div>');
 

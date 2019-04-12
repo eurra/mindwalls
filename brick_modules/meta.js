@@ -33,8 +33,9 @@ module.exports = {
 		function getActiveBrickFromWall(wall) {
 			let brick = null;
 
-			if(activeBricksMap.has(wall))
+			if(activeBricksMap.has(wall)) {
 				brick = activeBricksMap.get(wall);
+			}
 			else {
 				brick = wall.getFirstChild();
 
@@ -47,7 +48,7 @@ module.exports = {
 
 		function switchToActiveBrickFromWall(meta, wall) {
 			let brick = getActiveBrickFromWall(wall);
-			meta.onActiveBrickSet.call(brick);
+			meta.onActiveBrickSet(brick);
 		}
 
 		function changeActiveBrickOfWall(meta, wall, brick) {
@@ -62,7 +63,7 @@ module.exports = {
 				wall.mustBe('wall');
 				activeWall = wall;				
 				switchToActiveBrickFromWall(meta, activeWall);
-				meta.onActiveWallSet.call(activeWall);
+				meta.onActiveWallSet(activeWall);
 			}
 		}
 
