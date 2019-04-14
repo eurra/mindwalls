@@ -1,5 +1,20 @@
 
-module.exports = function() {
+function addEventHandler(targetMembers, newEventHandler) {
+	if(!targetMembers.has(newEventHandler.name)) {
+		throw new Error(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': no event has been loaded with such identifier`);
+	}
+	else {
+		let currMember = targetMembers.get(newEventHandler.name);
+
+		if(currMember.type != 'event') {
+			throw new Error(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': member is already loaded as method by '${currMember.apiId}', module triggered by '${apiModule.id})'`);
+		}
+
+		currMember.addHandler(newEventHandler);
+	}
+}
+
+module.exports = function(mainConfig = { allowUnload: false }) {
 	let publicAPI = {};	
 	let members = new Map();
 	let loadedModules = new Set();	
@@ -141,19 +156,7 @@ module.exports = function() {
 		// Extend event handlers
 		for(let i = 0; i < newEventHandlers.length; i++) { 
 			let newEventHandler = newEventHandlers[i];
-
-			if(!extendedMembers.has(newEventHandler.name)) {
-				throw new Error(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': no event has been loaded with such identifier`);
-			}
-			else {
-				let currMember = extendedMembers.get(newEventHandler.name);
-
-				if(currMember.type != 'event') {
-					throw new Error(`Conflicting event handler identifier '${newEventHandler.name}' when loading module '${newEventHandler.apiId}': member is already loaded as method by '${currMember.apiId}', module triggered by '${apiModule.id})'`);
-				}
-
-				currMember.addHandler(newEventHandler);
-			}
+			addEventHandler(extendedMembers, newEventHandler);
 		}
 
 		// Configure brick
@@ -194,12 +197,19 @@ module.exports = function() {
 	load({
 		id: 'core',
 		loader: function(setup) {
-			setup.addEvents([ 'onBeforeUnload' ]);
+			if(mainConfig.allowUnload)			
+				setup.addEvents([ 'onBeforeUnload' ]);
 
 			setup.extend({
 				load,
-				save,
-				unload,
+				on: function(eventName, eventHandler) {
+					addEventHandler(members, {
+						apiId: 'general',
+						name: eventName,
+						type: 'eventHandler',
+						method: eventHandler
+					});
+				},
 				instanceOf: function(type) {
 					return loadedModules.has(type);
 				},
@@ -211,6 +221,9 @@ module.exports = function() {
 						throw new Error(`Type validation failed: '${type}'`);
 				}
 			});
+
+			if(mainConfig.allowUnload)
+				setup.extend({ unload, save });
 		}
 	});
 

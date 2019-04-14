@@ -3,15 +3,14 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'wall',
 	loader: function(setup) {
-		setup.import(mw.bricks.jqGeneric);
-
 		let mainBrick = null;
 		let emptySpan = $('<span>(empty)</span>');
 
 		setup.configure(function(brick) {
-			brick.getView().addClass('wall');
-			brick.getContent().append(emptySpan);
-			brick.getValueContainer().css('display', 'none');
+			brick.getContent().
+				appendTo(brick.getView()).
+				append(emptySpan).				
+				addClass('wall');
 
 			brick.getChildrenContainer().
 				//append(emptySpan).
@@ -20,27 +19,33 @@ module.exports = {
 						emptySpan.show();
 					else
 						emptySpan.hide();
-				});
+				}).
+				appendTo(brick.getContent());
 		});
 
-		setup.require('nested', () => {
-			setup.on('onChildAdded', function(childBrick) {
-				mainBrick = childBrick;
-			});
+		setup.on('onChildAdded', function(added, prev, next) {
+			mainBrick = added;
 
-			setup.on('onChildValueSet', function(childBrick) {
-				this.setValue(childBrick.getValue());
-			});
+			if(prev)
+					added.getView().insertAfter(prev.getView());
+				else if(next)
+					added.getView().insertBefore(next.getView());
+				else
+					this.getChildrenContainer().append(added.getView());
+		});
 
-			setup.extend(function(){
-				return {
-					model: {
-						getMainBrick: function() {
-							return mainBrick;
-						}
+		setup.on('onChildValueSet', function(childBrick) {
+			this.setValue(childBrick.getValue());
+		});
+
+		setup.extend(function(){
+			return {
+				model: {
+					getMainBrick: function() {
+						return mainBrick;
 					}
-				};
-			});
+				}
+			};
 		});
 	}
 };

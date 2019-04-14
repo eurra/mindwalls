@@ -18,17 +18,6 @@ module.exports = {
 			}
 		});
 
-		setup.require('nested', () => {
-			setup.on('onChildAdded', function(added, prev, next) {
-				if(prev)
-					added.getView().insertAfter(prev.getView());
-				else if(next)
-					added.getView().insertBefore(next.getView());
-				else
-					this.getChildrenContainer().append(added.getView());
-			});
-		});
-
 		setup.on('onValueSet', function() {
 			let val = this.getValue();		
 			let text;

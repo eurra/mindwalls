@@ -1,4 +1,4 @@
-let mw = require('../core/mindwalls.js');
+//let mw = require('../core/mindwalls.js');
 
 /*mw.actions.register([
 	{
@@ -27,45 +27,8 @@ let mw = require('../core/mindwalls.js');
 module.exports = {
 	id: 'meta',
 	loader: function(setup) {
-		let activeWall = null;
-		let activeBricksMap = new Map();		
-
-		function getActiveBrickFromWall(wall) {
-			let brick = null;
-
-			if(activeBricksMap.has(wall)) {
-				brick = activeBricksMap.get(wall);
-			}
-			else {
-				brick = wall.getFirstChild();
-
-				if(brick != null)
-					activeBricksMap.set(brick, wall);
-			}
-			
-			return brick;
-		}
-
-		function switchToActiveBrickFromWall(meta, wall) {
-			let brick = getActiveBrickFromWall(wall);
-			meta.onActiveBrickSet(brick);
-		}
-
-		function changeActiveBrickOfWall(meta, wall, brick) {
-			if(brick != null && wall != null) {
-				activeBricksMap.set(wall, brick);
-				switchToActiveBrickFromWall(meta, wall);
-			}
-		}
-
-		function changeActiveWall(meta, wall) {
-			if(wall != null) {
-				wall.mustBe('wall');
-				activeWall = wall;				
-				switchToActiveBrickFromWall(meta, activeWall);
-				meta.onActiveWallSet(activeWall);
-			}
-		}
+		/*let activeWall = null;
+		let activeBricksMap = new Map();				
 
 		setup.addEvents([
 			'onActiveWallSet', 'onActiveBrickSet'
@@ -236,7 +199,7 @@ module.exports = {
 			$('.activeWall').removeClass('activeWall');
 
 			if(wall != null)
-				wall.getView().addClass('activeWall');
+				wall.getContent().addClass('activeWall');
 		});
 
 		setup.on('onActiveBrickSet', function(brick) {
@@ -244,12 +207,20 @@ module.exports = {
 
 			if(brick != null)
 				brick.getView().addClass('activeBrick');
-		});
+		});*/
 
 		setup.configure(function(brick) {
 			brick.getView().
-				addClass('metabrick').
-				attr('tabindex', 0);
+				css('height', '100%').
+				attr('tabindex', 0).
+				append(
+					brick.getContent().
+						css('height', '100%').
+						append(
+							brick.getChildrenContainer().
+								addClass('metabrick')
+						)
+				);
 		});
 	}
 };

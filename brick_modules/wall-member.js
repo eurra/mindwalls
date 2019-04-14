@@ -13,7 +13,7 @@ module.exports = {
 					let childs = this.getChilds();
 
 					for(let i = 0; i < childs.length; i++) {
-						if(childs[i].instanceOf('wall-member'))
+						if(childs[i].instanceOf('wall-member') && childs[i].getWall() !== wall)
 							childs[i].setWall(wall);
 					}
 				}

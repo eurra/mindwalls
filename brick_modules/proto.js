@@ -10,10 +10,9 @@ let baseModule = {
 			'onValueSet', 'onNameSet', 
 		]);
 
-		setup.on('onBeforeUnload', function() {
+		/*setup.on('onBeforeUnload', function() {
 			this.setValue(null);
-			this.getView().empty();
-		});
+		});*/
 
 		setup.extend({
 			getParent: function() {
@@ -138,6 +137,10 @@ let nestedModule = {
 				}
 
 				handleChildAdded(this, node);
+			},
+			addChilds: function(childs) {
+				for(let i = 0; i < childs.length; i++)
+					this.addChild(childs[i]);
 			},
 			addChildFirst: function(childBrick) {
 				let node = createNodeFor(childBrick);
@@ -286,10 +289,10 @@ let viewModule = {
 			view.remove();
 		});
 
-		setup.on('onBeforeUnload', function() {
+		/*setup.on('onBeforeUnload', function() {
 			view.empty();
 			content.empty();
-		});
+		});*/
 	}
 };
 
@@ -297,6 +300,15 @@ let nestedViewModule = {
 	id: 'jq-nested',
 	loader: function(setup) {
 		let childrenCont = $('<div>');
+
+		setup.on('onChildAdded', function(added, prev, next) {
+			if(prev)
+				added.getView().insertAfter(prev.getView());
+			else if(next)
+				added.getView().insertBefore(next.getView());
+			else
+				this.getChildrenContainer().append(added.getView());
+		});
 
 		setup.extend({
 			getChildrenContainer: function() {
@@ -319,7 +331,7 @@ function createBrick(terminal = false) {
 		newBrick.load(nestedViewModule);
 	}
 
-	newBrick.save();
+	//newBrick.save();
 	return newBrick;
 }
 
