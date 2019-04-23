@@ -24,28 +24,27 @@ module.exports = {
 		});
 
 		setup.on('onChildAdded', function(added, prev, next) {
+			added.mustBe('wall-member');
 			mainBrick = added;
 
 			if(prev)
-					added.getView().insertAfter(prev.getView());
-				else if(next)
-					added.getView().insertBefore(next.getView());
-				else
-					this.getChildrenContainer().append(added.getView());
+				added.getView().insertAfter(prev.getView());
+			else if(next)
+				added.getView().insertBefore(next.getView());
+			else
+				this.getChildrenContainer().append(added.getView());
+
+			added.setWall(this);
 		});
 
 		setup.on('onChildValueSet', function(childBrick) {
 			this.setValue(childBrick.getValue());
 		});
 
-		setup.extend(function(){
-			return {
-				model: {
-					getMainBrick: function() {
-						return mainBrick;
-					}
-				}
-			};
+		setup.extend({
+			getMainBrick: function() {
+				return mainBrick;
+			}
 		});
 	}
 };

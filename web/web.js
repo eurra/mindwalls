@@ -77,10 +77,9 @@ $(function() {
 	//let finalBricks = mindwalls.import.from(examples);
 	//mindwalls.generalUI.addWalls(finalBricks);
 
-	let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: [] });
-	let walls = mw.import.walls(examples, meta);		
-	mw.generalUI.setMeta(meta);
-	meta.addChilds(walls);
+	let walls = mw.import.walls(examples);		
+	mw.generalUI.displayWalls(walls);
+	
 
 	/*let test = apiMaker();
 

@@ -20,7 +20,7 @@ mw.actions.register([
 			if(configMap.size == 0)
 				return;
 
-			let activeBrick = mw.generalUI.getMeta().getActiveBrick();
+			let activeBrick = mw.generalUI.getLoaded().getActiveBrick();
 
 			let addDialog = $(`<div title="Select brick type">`).
 				dialog({ 
@@ -45,6 +45,7 @@ mw.actions.register([
 
 			let brickHandler = function(newBrick) {
 				activeBrick.getParent().addChildAfter(newBrick, activeBrick);
+				mw.generalUI.getLoaded().changeActiveBrick(newBrick);
 			}
 
 			let combo = $('<select size="1"><option disabled selected value>select...</option></select>').				

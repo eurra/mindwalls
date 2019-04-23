@@ -86,6 +86,12 @@ let nestedModule = {
 		}
 
 		function createNodeFor(child) {
+			if(nodesMap.has(child))
+				throw new Error('Cannot add a duplicate child on nested brick');
+
+			/*if(child.instanceOf('wall'))
+				console.log(child.getView());*/
+
 			let node = {
 				next: null,
 				prev: null,
@@ -244,9 +250,9 @@ let nestedModule = {
 				if(node == null || node.prev == null)
 					return res;
 
-				let curr = node.prev;
+				let curr = node.prev;				
 
-				while(curr != null) {
+				while(curr != null) {					
 					res.push(curr.brick);
 					curr = curr.prev;
 				}
@@ -265,6 +271,9 @@ let nestedModule = {
 				}
 
 				return res;
+			},
+			hasChild: function(childBrick) {
+				return nodesMap.has(childBrick);
 			}
 		});
 	}

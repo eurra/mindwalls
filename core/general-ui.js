@@ -1,75 +1,5 @@
 let mw = require('../core/mindwalls.js');
 
-let metaBrick = null;
-let activeWall = null;
-let activeBricksMap = new Map();
-
-function getActiveBrickFromWall(wall) {
-	let brick = null;
-
-	if(activeBricksMap.has(wall)) {
-		brick = activeBricksMap.get(wall);
-	}
-	else {
-		brick = wall.getFirstChild();
-
-		if(brick != null)
-			activeBricksMap.set(brick, wall);
-	}
-	
-	return brick;
-}
-
-function switchToActiveBrickFromWall(wall) {
-	if(metaBrick != null) {
-		let brick = getActiveBrickFromWall(wall);
-
-		$('.activeBrick').removeClass('activeBrick');
-
-		if(brick != null)
-			brick.getView().addClass('activeBrick');
-	}
-}
-
-function changeActiveBrickOfWall(wall, brick) {
-	if(metaBrick != null && brick != null && wall != null) {
-		activeBricksMap.set(wall, brick);
-		switchToActiveBrickFromWall(wall);
-	}
-}
-
-function changeActiveWall(wall) {
-	if(metaBrick != null && wall != null) {
-		wall.mustBe('wall');
-		activeWall = wall;				
-		switchToActiveBrickFromWall(activeWall);
-
-		$('.activeWall').removeClass('activeWall');
-		wall.getContent().addClass('activeWall');
-	}
-}
-
-function getClosestBrickOf(brick) {
-	let currBrick = brick;						
-
-	if(currBrick != null) {
-		let parentBrick = currBrick.getParent();
-		let nextBrick = parentBrick.getPrevSiblingOf(currBrick);
-
-		if(nextBrick == null) {
-			currBrick = parentBrick.getNextSiblingOf(currBrick);
-
-			if(currBrick != null)
-				changeActiveBrickOfWall(this, activeWall, currBrick);
-			else if(!parentBrick.instanceOf('wall'))
-				changeActiveBrickOfWall(this, activeWall, parentBrick);
-		}
-		else {
-			changeActiveBrickOfWall(this, activeWall, nextBrick);	
-		}
-	}
-}
-
 function checkIntersect(elem1, elem2) {
 	let e1L = elem1.position().left;
 	let e1R = e1L + elem1.width();
@@ -77,132 +7,211 @@ function checkIntersect(elem1, elem2) {
 	let e2L = elem2.position().left;
 	let e2R = e2L + elem2.width();
 
-	return Math.max(e1L, e2L) <= Math.max(e1R, e2R);
+	return Math.max(e1L, e2L) < Math.min(e1R, e2R);
 }
 
-mw.actions.register([
-	{	// Move up between walls
-		ctrlKey: true,
-		key: 38,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-				return;
+function getHorizontalDistance(elem1, elem2) {
+	let e1m = elem1.position().left + (elem1.width() / 2);
+	let e2m = elem2.position().left + (elem2.width() / 2);
 
-			let nextWalls = metaBrick.getPrevAllOf(activeWall);
-			let top = activeWall.getView().position().top;
-			let target = null;
-			let i = 0;
+	return Math.abs(e1m - e2m);
+}
 
-			while(target == null && i < nextWalls.length) {
-				let checkBottom = nextWalls[i].getView().position().top + nextWalls[i].getView().height();
+function getVerticalDistance(elem1, elem2) {
+	let e1m = elem1.position().top + (elem1.height() / 2);
+	let e2m = elem2.position().top + (elem2.height() / 2);
 
-				if(checkBottom < top && checkIntersect(nextWalls[i].getView(), activeWall.getView()))
-					target = nextWalls[i];
+	return Math.abs(e1m - e2m);
+}
 
-				i++;
+let uiModule = {
+	id: 'general-ui',
+	loader: function(setup) {
+		let activeWall = null;
+		let activeBricksMap = new Map();
+
+		function getActiveBrickFromWall(wall) {
+			let brick = null;
+
+			if(activeBricksMap.has(wall)) {
+				brick = activeBricksMap.get(wall);
 			}
+			else {
+				brick = wall.getFirstChild();
 
-			if(target != null)
-				changeActiveWall(target);
-		}
-	},
-	{
-		// Move down between walls
-		ctrlKey: true,
-		key: 40,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-				return;
-
-			let nextWalls = metaBrick.getNextAllOf(activeWall);
-			let bottom = activeWall.getView().position().top + activeWall.getView().height();			
-			let target = null;
-			let i = 0;
-
-			while(target == null && i < nextWalls.length) {
-				let checkTop = nextWalls[i].getView().position().top;
-
-				if(bottom < checkTop && checkIntersect(nextWalls[i].getView(), activeWall.getView()))
-					target = nextWalls[i];
-
-				i++;
+				if(brick != null)
+					activeBricksMap.set(brick, wall);
 			}
+			
+			return brick;
+		}
 
-			if(target != null)
-				changeActiveWall(target);
-		}
-	},
-	{
-		// Move right between walls
-		ctrlKey: true,
-		key: 39,
-		action: function() {
-			changeActiveWall(
-				metaBrick.getNextSiblingOf(activeWall)
-			);
-		}
-	},
-	{
-		// Move left between walls
-		ctrlKey: true,
-		key: 37,
-		action: function() {
-			changeActiveWall(
-				metaBrick.getPrevSiblingOf(activeWall)
-			);
-		}
-	},
-	{
-		// Move to parent (left) within wall
-		key: 37,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-				return;
+		function switchToActiveBrickFromWall(wall) {
+			let brick = getActiveBrickFromWall(wall);
 
-			let currBrick = getActiveBrickFromWall(activeWall);						
+			$('.activeBrick').removeClass('activeBrick');
+
+			if(brick != null)
+				brick.getView().addClass('activeBrick');
+		}
+
+		function changeActiveBrickOfWall(wall, brick) {
+			if(brick != null && wall != null) {
+				activeBricksMap.set(wall, brick);
+				switchToActiveBrickFromWall(wall);
+			}
+		}
+
+		function changeActiveWall(wall) {
+			if(wall != null) {
+				wall.mustBe('wall');
+				activeWall = wall;				
+				switchToActiveBrickFromWall(activeWall);
+
+				$('.activeWall').removeClass('activeWall');
+				wall.getContent().addClass('activeWall');
+			}
+		}
+
+		function getClosestBrickOf(brick) {
+			let currBrick = brick;						
 
 			if(currBrick != null) {
 				let parentBrick = currBrick.getParent();
+				let closestBrick = parentBrick.getPrevSiblingOf(currBrick);
+				console.log(closestBrick.getView());
 
-				if(parentBrick != null && !parentBrick.instanceOf('wall'))
-					changeActiveBrickOfWall(activeWall, parentBrick);
-			}
-		}
-	},
-	{
-		// Move to child (right) within wall
-		key: 39,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-				return;
+				if(closestBrick == null) {
+					closestBrick = parentBrick.getNextSiblingOf(currBrick);
 
-			let currBrick = getActiveBrickFromWall(activeWall);
-
-			if(currBrick != null && currBrick.instanceOf('nested')) {							
-				let childBrick = currBrick.getFirstChild();
-
-				if(childBrick != null)
-					changeActiveBrickOfWall(activeWall, childBrick);
-			}
-		}
-	},
-	{
-		// Move to next sibling (down) within wall
-		key: 40,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-					return;
-
-			let currBrick = getActiveBrickFromWall(activeWall);						
-
-			if(currBrick != null) {
-				let parentBrick = currBrick.getParent();
-				currBrick = parentBrick.getNextSiblingOf(currBrick);
-
-				if(currBrick != null) {								
-					changeActiveBrickOfWall(this, activeWall, currBrick);
+					if(closestBrick != null)
+						changeActiveBrickOfWall(activeWall, closestBrick);
+					else if(!parentBrick.instanceOf('wall'))
+						changeActiveBrickOfWall(activeWall, parentBrick);
 				}
 				else {
+					changeActiveBrickOfWall(activeWall, closestBrick);	
+				}
+			}
+		}
+
+		function getClosestWall(nextWalls) {
+			let target = null;
+			let bestVerticalDist = 0;
+			let bestHorizontalDist = 0;
+			let i = 0;
+
+			while(i < nextWalls.length) {
+				if(checkIntersect(nextWalls[i].getView(), activeWall.getView())) {					
+					let verticalDist = getVerticalDistance(nextWalls[i].getView(), activeWall.getView());
+
+					if(target == null || (verticalDist <= bestVerticalDist)) {				
+						let horizontalDist = getHorizontalDistance(nextWalls[i].getView(), activeWall.getView());
+
+						if(target == null || horizontalDist < bestHorizontalDist) {
+							target = nextWalls[i];
+							bestVerticalDist = verticalDist;
+							bestHorizontalDist = horizontalDist;
+						}
+					}
+				}
+
+				i++;
+			}
+
+			return target;
+		}
+
+		setup.on('onChildAdded', function(child) {
+			if(activeWall == null)			
+				changeActiveWall(child);
+		});
+
+		setup.extend({
+			getActiveBrick: function() {
+				return getActiveBrickFromWall(activeWall);
+			},
+			changeActiveBrick: function(brick) {
+				if(!brick.instanceOf('wall-member'))
+					throw new Error('Cannot activate brick: must be a wall member instance');
+
+				let containerWall = brick.getWall();
+
+				if(!this.hasChild(containerWall)) {
+					console.log(containerWall)
+					throw new Error('Cannot activate brick: wall container is not child of loaded ui');
+				}
+
+				if(containerWall !== activeWall)
+					changeActiveWall(containerWall);
+
+				changeActiveBrickOfWall(containerWall, brick);
+			},
+			moveToUpperWall: function() {
+				if(activeWall == null)
+					return;
+
+				let nextWalls = this.getPrevAllOf(activeWall);
+				let target = getClosestWall(nextWalls);
+
+				if(target != null)
+					changeActiveWall(target);
+			},
+			moveToLowerWall: function() {
+				if(activeWall == null)
+					return;
+
+				let nextWalls = this.getNextAllOf(activeWall);
+				let target = getClosestWall(nextWalls);
+
+				if(target != null)
+					changeActiveWall(target);
+			},
+			moveToRightWall: function() {
+				changeActiveWall(
+					this.getNextSiblingOf(activeWall)
+				);
+			},
+			moveToLeftWall: function() {
+				changeActiveWall(
+					this.getPrevSiblingOf(activeWall)
+				);
+			},
+			moveToParentBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+
+					if(parentBrick != null && !parentBrick.instanceOf('wall'))
+						changeActiveBrickOfWall(activeWall, parentBrick);
+				}
+			},
+			moveToChildBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);
+
+				if(currBrick != null && currBrick.instanceOf('nested')) {							
+					let childBrick = currBrick.getFirstChild();
+
+					if(childBrick != null)
+						changeActiveBrickOfWall(activeWall, childBrick);
+				}
+			},
+			moveToNextSiblingBrick: function() {
+				if(activeWall == null)
+					return;
+
+				let currBrick = getActiveBrickFromWall(activeWall);						
+
+				if(currBrick != null) {
+					let parentBrick = currBrick.getParent();
+
 					while(!parentBrick.instanceOf('wall') && parentBrick.getNextSiblingOf(currBrick) == null) {
 						currBrick = parentBrick;
 						parentBrick = currBrick.getParent();
@@ -210,33 +219,19 @@ mw.actions.register([
 
 					currBrick = parentBrick.getNextSiblingOf(currBrick);
 
-					if(currBrick != null) {
-						while(currBrick.instanceOf('nested'))
-							currBrick = currBrick.getFirstChild();
-
+					if(currBrick !== null)
 						changeActiveBrickOfWall(activeWall, currBrick);
-					}
 				}
-			}
-		}
-	},
-	{
-		// Move to prev sibling (up) within wall
-		key: 38,
-		action: function() {
-			if(metaBrick == null || activeWall == null)
-				return;
+			},
+			moveToPrevSiblingBrick: function() {
+				if(activeWall == null)
+					return;
 
-			let currBrick = getActiveBrickFromWall(activeWall);						
-
-			if(currBrick != null) {
-				let parentBrick = currBrick.getParent();
-				currBrick = parentBrick.getPrevSiblingOf(currBrick);
+				let currBrick = getActiveBrickFromWall(activeWall);						
 
 				if(currBrick != null) {
-					changeActiveBrickOfWall(activeWall, currBrick);
-				}
-				else {
+					let parentBrick = currBrick.getParent();
+
 					while(!parentBrick.instanceOf('wall') && parentBrick.getPrevSiblingOf(currBrick) == null) {
 						currBrick = parentBrick;
 						parentBrick = currBrick.getParent();
@@ -244,59 +239,42 @@ mw.actions.register([
 
 					currBrick = parentBrick.getPrevSiblingOf(currBrick);
 
-					if(currBrick != null) {
-						while(currBrick.instanceOf('nested'))
-							currBrick = currBrick.getLastChild();
-
+					if(currBrick !== null)
 						changeActiveBrickOfWall(activeWall, currBrick);
-					}
 				}
-			}
-		}
-	},
-	{
-		// Supr - remove brick
-		key: 46,
-		action: function() {
-			let currBrick = metaBrick.getActiveBrick();
+			},
+			removeActiveBrick: function() {
+				let currBrick = this.getActiveBrick();
 
-			if(currBrick != null) {
-				if(metaBrick == null || activeWall == null)
-					return;
-
-				let activeBrick = getActiveBrickFromWall(activeWall)
-
-				if(activeBrick != null) {
+				if(currBrick != null) {
 					changeActiveBrickOfWall(
 						activeWall,
-						getClosestBrickOf(activeBrick)
+						getClosestBrickOf(currBrick)
 					);
+
+					currBrick.dispose();
 				}
-
-				currBrick.dispose();
-			}
-		}
-	}
-]);
-
-module.exports = {
-	setMeta: function(meta) {
-		meta.mustBe('meta');
-		$('body').empty();
-		meta.getView().appendTo('body');		
-		mw.actions.setTargetElem(meta.getView());
-		metaBrick = meta;
-
-		meta.on('onChildAdded', function(child) {
-			console.log('aaaa');
-			
-			if(activeWall == null) {				
-				changeActiveWall(child);
 			}
 		});
+	}
+};
+
+let loadedUI = null;
+
+module.exports = {
+	displayWalls: function(walls) {
+		let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: [] });
+		meta.load(uiModule);
+		meta.addChilds(walls);
+
+		$('body').empty();
+		meta.getView().appendTo('body');
+
+		loadedUI = meta;
+		mw.actions.setTargetElem(meta.getView());
 	},
-	getMeta: function() {
-		return metaBrick;
+	getLoaded: function() {
+		return loadedUI;
 	},
 	showInputDialog: function(config) {
 		let inputDialog = $(`<div title="${config.title}">`).
@@ -337,3 +315,81 @@ module.exports = {
 		inputDialog.dialog('open');
 	}
 };
+
+mw.actions.register([
+	{	// Move up between walls
+		ctrlKey: true,
+		key: 38,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToUpperWall();
+		}
+	},
+	{
+		// Move down between walls
+		ctrlKey: true,
+		key: 40,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToLowerWall();
+		}
+	},
+	{
+		// Move right between walls
+		ctrlKey: true,
+		key: 39,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToRightWall();
+		}
+	},
+	{
+		// Move left between walls
+		ctrlKey: true,
+		key: 37,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToLeftWall();
+		}
+	},
+	{
+		// Move to parent (left) within wall
+		key: 37,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToParentBrick();
+		}
+	},
+	{
+		// Move to child (right) within wall
+		key: 39,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToChildBrick();
+		}
+	},
+	{
+		// Move to next sibling (down) within wall
+		key: 40,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToNextSiblingBrick();
+		}
+	},
+	{
+		// Move to prev sibling (up) within wall
+		key: 38,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.moveToPrevSiblingBrick();
+		}
+	},
+	{
+		// Supr - remove brick
+		key: 46,
+		action: function() {
+			if(loadedUI != null)
+				loadedUI.removeActiveBrick();
+		}
+	}
+]);

@@ -27,12 +27,12 @@ function importBrick(brickConfig, parent = null) {
 	return brick;
 }
 
-function importWalls(wallsData, meta = null) {
+function importWalls(wallsData) {
 	let walls = [];
 
 	for(let i in wallsData) {
 		let wallConfig = wallsData[i];		
-		let wall = importBrick(wallConfig, meta);
+		let wall = importBrick(wallConfig);
 		walls.push(wall);
 	}
 

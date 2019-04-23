@@ -5,6 +5,13 @@ module.exports = {
 
 		setup.addEvents([ 'onWallSet' ]);
 
+		setup.require('nested', () => {
+			setup.on('onChildAdded', function(added) {
+				added.mustBe('wall-member');
+				added.setWall(this.getWall());
+			});
+		});
+
 		setup.extend({
 			setWall: function(newWall) {
 				wall = newWall;
