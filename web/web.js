@@ -79,7 +79,6 @@ $(function() {
 
 	let walls = mw.import.walls(examples);		
 	mw.generalUI.displayWalls(walls);
-	
 
 	/*let test = apiMaker();
 

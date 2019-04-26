@@ -79,7 +79,6 @@ let uiModule = {
 			if(currBrick != null) {
 				let parentBrick = currBrick.getParent();
 				let closestBrick = parentBrick.getPrevSiblingOf(currBrick);
-				console.log(closestBrick.getView());
 
 				if(closestBrick == null) {
 					closestBrick = parentBrick.getNextSiblingOf(currBrick);
@@ -268,13 +267,8 @@ module.exports = {
 		meta.addChilds(walls);
 
 		$('body').empty();
-		meta.getView().appendTo('body');
-
+		meta.getView().appendTo('body').focus();
 		loadedUI = meta;
-		mw.actions.setTargetElem(meta.getView());
-	},
-	getLoaded: function() {
-		return loadedUI;
 	},
 	showInputDialog: function(config) {
 		let inputDialog = $(`<div title="${config.title}">`).
@@ -316,13 +310,16 @@ module.exports = {
 	}
 };
 
-mw.actions.register([
+function checkLoadedUI() {
+	if(loadedUI)
+}
+
+mw.actions.register(() => loadedUI.getView(), [
 	{	// Move up between walls
 		ctrlKey: true,
 		key: 38,
-		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToUpperWall();
+		action: function(target) {
+			target.moveToUpperWall();
 		}
 	},
 	{
@@ -330,8 +327,7 @@ mw.actions.register([
 		ctrlKey: true,
 		key: 40,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToLowerWall();
+			target.moveToLowerWall();
 		}
 	},
 	{
@@ -339,8 +335,7 @@ mw.actions.register([
 		ctrlKey: true,
 		key: 39,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToRightWall();
+			target.moveToRightWall();
 		}
 	},
 	{
@@ -348,48 +343,42 @@ mw.actions.register([
 		ctrlKey: true,
 		key: 37,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToLeftWall();
+			target.moveToLeftWall();
 		}
 	},
 	{
 		// Move to parent (left) within wall
 		key: 37,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToParentBrick();
+			target.moveToParentBrick();
 		}
 	},
 	{
 		// Move to child (right) within wall
 		key: 39,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToChildBrick();
+			target.moveToChildBrick();
 		}
 	},
 	{
 		// Move to next sibling (down) within wall
 		key: 40,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToNextSiblingBrick();
+			target.moveToNextSiblingBrick();
 		}
 	},
 	{
 		// Move to prev sibling (up) within wall
 		key: 38,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.moveToPrevSiblingBrick();
+			target.moveToPrevSiblingBrick();
 		}
 	},
 	{
 		// Supr - remove brick
 		key: 46,
 		action: function() {
-			if(loadedUI != null)
-				loadedUI.removeActiveBrick();
+			target.removeActiveBrick();
 		}
 	}
 ]);

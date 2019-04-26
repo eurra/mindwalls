@@ -16,13 +16,26 @@ mw.actions.register([
 	{
 		// Insert - add after
 		key: 13,
-		action: function() {
+		resolveTarget: () => mw.generalUI.getLoaded().getView(),
+		action: function(loadedUI) {
 			if(configMap.size == 0)
 				return;
 
-			let activeBrick = mw.generalUI.getLoaded().getActiveBrick();
+			let activeBrick = loadedUI.getActiveBrick();
+			let input = $(`<input type="text" value="test" onkeypress="this.style.width = ((this.value.length + 1) * 8) + 'px';"/>`);
 
-			let addDialog = $(`<div title="Select brick type">`).
+			$(`<div class="brick"></div>`).
+				insertAfter(activeBrick.getView()).
+				append(input);
+
+			input.focus();
+
+			
+		}
+	}
+]);
+
+/*let addDialog = $(`<div title="Select brick type">`).
 				dialog({ 
 					autoOpen: false,
 					modal: true,
@@ -61,7 +74,4 @@ mw.actions.register([
 					appendTo(combo);
 			});
 
-			addDialog.dialog('open');
-		}
-	}
-]);
+			addDialog.dialog('open');*/

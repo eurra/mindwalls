@@ -15,7 +15,7 @@ function findConfig(config) {
 			locatedConfig = checkConfig;
 		}
 		
-		i++;	
+		i++;
 	}
 
 	if(locatedConfig === null) {
@@ -26,24 +26,26 @@ function findConfig(config) {
 	return locatedConfig;
 }
 
+$(document).keydown(function(e) {
+	let config = {
+		shiftKey: e.shiftKey,
+		ctrlKey: e.ctrlKey,
+		altKey: e.altKey,
+		key: e.which
+	};
+
+	let foundConfig = findConfig(config);
+
+	if(foundConfig.targetResolver().is($(document.activeElement))) {
+		for(let i in foundConfig.handlers)
+			foundConfig.handlers[i](e);
+	}
+
+	e.preventDefault();
+});
+
 module.exports = {
-	setTargetElem: function(elem) {
-		elem.keydown(function(e) {
-			let config = {
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				altKey: e.altKey,
-				key: e.which
-			};
-
-			let foundConfig = findConfig(config);
-
-			for(let i in foundConfig.handlers)
-				foundConfig.handlers[i](e);
-		}).
-		focus();
-	},
-	register: function(toRegister) {
+	register: function(targetResolver, toRegister) {
 		for(let i in toRegister) {
 			let entry = toRegister[i];
 
@@ -51,7 +53,8 @@ module.exports = {
 				shiftKey: entry.shiftKey ? entry.shiftKey : false,
 				ctrlKey: entry.ctrlKey ? entry.ctrlKey : false,
 				altKey: entry.altKey ? entry.altKey : false,
-				key: entry.key
+				key: entry.key,
+				targetResolver
 			};
 
 			let foundConfig = findConfig(config);
