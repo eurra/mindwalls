@@ -310,9 +310,9 @@ module.exports = {
 	}
 };
 
-function checkLoadedUI() {
+/*function checkLoadedUI() {
 	if(loadedUI)
-}
+}*/
 
 mw.actions.register(() => loadedUI.getView(), [
 	{	// Move up between walls
