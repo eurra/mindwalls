@@ -260,14 +260,18 @@ let uiModule = {
 
 let loadedUI = null;
 
+function getLoadedUI() {
+	return loadedUI;
+}
+
 module.exports = {
 	displayWalls: function(walls) {
 		let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: [] });
 		meta.load(uiModule);
 		meta.addChilds(walls);
 
-		$('body').empty();
-		meta.getView().appendTo('body').focus();
+		$('#metabrick-area').empty().focus();
+		meta.getView().appendTo('#metabrick-area').focus();
 		loadedUI = meta;
 	},
 	showInputDialog: function(config) {
@@ -310,11 +314,7 @@ module.exports = {
 	}
 };
 
-/*function checkLoadedUI() {
-	if(loadedUI)
-}*/
-
-mw.actions.register(() => loadedUI.getView(), [
+mw.actions.register(() => getLoadedUI(), [
 	{	// Move up between walls
 		ctrlKey: true,
 		key: 38,
@@ -326,7 +326,7 @@ mw.actions.register(() => loadedUI.getView(), [
 		// Move down between walls
 		ctrlKey: true,
 		key: 40,
-		action: function() {
+		action: function(target) {
 			target.moveToLowerWall();
 		}
 	},
@@ -334,7 +334,7 @@ mw.actions.register(() => loadedUI.getView(), [
 		// Move right between walls
 		ctrlKey: true,
 		key: 39,
-		action: function() {
+		action: function(target) {
 			target.moveToRightWall();
 		}
 	},
@@ -342,42 +342,42 @@ mw.actions.register(() => loadedUI.getView(), [
 		// Move left between walls
 		ctrlKey: true,
 		key: 37,
-		action: function() {
+		action: function(target) {
 			target.moveToLeftWall();
 		}
 	},
 	{
 		// Move to parent (left) within wall
 		key: 37,
-		action: function() {
+		action: function(target) {
 			target.moveToParentBrick();
 		}
 	},
 	{
 		// Move to child (right) within wall
 		key: 39,
-		action: function() {
+		action: function(target) {
 			target.moveToChildBrick();
 		}
 	},
 	{
 		// Move to next sibling (down) within wall
 		key: 40,
-		action: function() {
+		action: function(target) {
 			target.moveToNextSiblingBrick();
 		}
 	},
 	{
 		// Move to prev sibling (up) within wall
 		key: 38,
-		action: function() {
+		action: function(target) {
 			target.moveToPrevSiblingBrick();
 		}
 	},
 	{
 		// Supr - remove brick
 		key: 46,
-		action: function() {
+		action: function(target) {
 			target.removeActiveBrick();
 		}
 	}

@@ -1,5 +1,3 @@
-let mw = require('../core/mindwalls.js');
-
 module.exports = {
 	id: 'wall',
 	loader: function(setup) {

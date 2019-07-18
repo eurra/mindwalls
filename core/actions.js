@@ -26,7 +26,11 @@ function findConfig(config) {
 	return locatedConfig;
 }
 
-$(document).keydown(function(e) {
+function getTarget() {
+	return $(document);
+}
+
+getTarget().keydown(function(e) {
 	let config = {
 		shiftKey: e.shiftKey,
 		ctrlKey: e.ctrlKey,
@@ -34,17 +38,18 @@ $(document).keydown(function(e) {
 		key: e.which
 	};
 
-	let foundConfig = findConfig(config);
+	let foundConfig = findConfig(config);	
 
-	if(foundConfig.targetResolver().is($(document.activeElement))) {
+	if(foundConfig.targetResolver && foundConfig.targetResolver().getView().is($(document.activeElement))) {
 		for(let i in foundConfig.handlers)
-			foundConfig.handlers[i](e);
+			foundConfig.handlers[i](foundConfig.targetResolver(), e);
 	}
 
 	e.preventDefault();
 });
 
 module.exports = {
+	getTarget,
 	register: function(targetResolver, toRegister) {
 		for(let i in toRegister) {
 			let entry = toRegister[i];

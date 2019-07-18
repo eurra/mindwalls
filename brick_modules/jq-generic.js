@@ -36,7 +36,7 @@ module.exports = {
 			let name = this.getName();
 
 			if(name != null)
-				this.getNameLabel().html(name);
+				this.getNameLabel().html(name + ':');
 		});
 
 		setup.extend({

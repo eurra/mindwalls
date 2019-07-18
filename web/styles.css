@@ -17,20 +17,29 @@ body {
     overflow-x: hidden;
 }
 
+#command-palette {
+	border: 2px solid black;
+	height: 50px;
+	float: left;
+	width: 100%;
+}
+
 .metabrick {
 	display: flex;
+	/*flex-direction: column;*/
 	align-items: center;
-	justify-content: space-around;
+	justify-content: center;
 	align-content: center;
 	flex-wrap: wrap;
 	height: 100%;
+	padding: 10px;
 }
 
 .wall {
-	font-size: small;
-	padding: 10px;
-	margin: 5px;
 	border: 1px dashed grey;
+	font-size: small;
+	padding: 2px;
+	margin: 5px;
 	color: grey;
 	text-align: center;	
 }
@@ -38,33 +47,43 @@ body {
 .brick {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
-	border-radius: 5px;	
+	justify-content: center;		
 	text-align: center;
 	padding: 2px;
-	margin: 1px;
+	margin: 2px;
 	color: black;
-	border: 1px solid grey;
+	/*background-color: white;*/
+	/*border: 1px solid grey;*/
 }
 
 .data {
-	background-color: #ffffcc;
-	padding-left: 4px;
-	padding-right: 4px;
+	/*background-color: #ffffcc;*/
+	/*border: 1px dashed grey;*/
+	border-radius: 5px;
+	/*padding-left: 4px;
+	padding-right: 4px;*/
 	flex: 1;
 	text-align: left;
+	font-weight: bold;
+	color: blue;
 }
 
 .result {
-	background-color: #ffad50;
-	padding-left: 4px;
-	padding-right: 4px;
+	/*background-color: #ffad50;*/
+	/*border: 1px dashed grey;*/
+	/*padding-left: 4px;
+	padding-right: 4px;*/
 	text-align: left;
+	font-style: italic;
 }
 
 .funcName {
+	font-size: medium;
+	font-weight: bold;
+	border: 2px solid grey;
+	border-radius: 5px;
 	font-weight: bolder;
-	background-color: #ccffff;
+	/*background-color: #ccffff;*/
 	flex: 1;
 }
 
@@ -79,8 +98,8 @@ body {
 }
 
 .paramName {
-	background-color: white;
-	border: 1px solid grey;
+	background-color: transparent;
+	/*border: 1px solid grey;*/
 	font-weight: bolder; 
 }
 
@@ -118,8 +137,8 @@ body, html {
 }
 
 .activeWall {
-	border: 3px solid blue;
-	padding: 8px;
+	border: 1px solid blue;
+	/*background-color: lightgrey;*/
 }
 
 .activeBrick {
