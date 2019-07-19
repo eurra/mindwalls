@@ -88,6 +88,12 @@ module.exports = {
 			brick.getContent().append(content);
 			brick.getValueContainer().css('display', '');
 
+			brick.addData('func-name', 'Function Name', "no name");
+			brick.addData('func-desc', 'Description', "no desc");
+			brick.setStaticData('brick-type', 'Function');
+			brick.setStaticData('func-name', config.id);
+			brick.setStaticData('func-desc', def.description);
+
 			/*brick.view.getChildrenContainer().
 				addClass('noChilds').
 				on('DOMSubtreeModified', function() {

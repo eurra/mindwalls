@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>Title of the document</title>		
+		<title>Mindwalls</title>		
 		<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/redmond/jquery-ui.css">
 		<link rel="stylesheet" type="text/css" href="styles.css">
 		<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
@@ -17,8 +17,12 @@
 		<script>if (window.module) module = window.module;</script>
 	</head>
 
-	<body style="height: 99%;">	
-		<div id="metabrick-area" style="height: 99%;"></div>
-		<div id="command-palette"></div>
+	<body style="height: 98%;">	
+		<div style="width: 100%; padding: 5px; border-bottom: 1px dashed grey; z-index: 1; position: absolute; background-color: white; margin-bottom: 10px;">
+			<div style="font-style: italic; font-size: small; padding-bottom: 10px;">Mindwalls v0.0.1 - by Enrique Urra</div>
+			<div id="info-display" style="margin: 5px; text-align: center; display: flex; justify-content: center; align-items: center; line-height: 20px; font-size: larger;"></div>
+		</div>
+
+		<div id="metabrick-area" style="height: 99%;"></div>		
 	</body>
 </html>

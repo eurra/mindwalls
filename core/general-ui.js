@@ -24,6 +24,33 @@ function getVerticalDistance(elem1, elem2) {
 	return Math.abs(e1m - e2m);
 }
 
+function updateInfoDisplay(brick) {
+	if(brick == null) {
+		$('#info-display').html('Select a brick to display info');
+	}
+	else {
+		let allData = brick.getAllData();
+
+		if(allData.length == 0) {
+			$('#info-display').html('No data related to brick');
+		}
+		else {
+			$('#info-display').html('<div>Selected brick:</div>&nbsp;');			
+
+			for(let i in allData) {
+				let dataObj = allData[i];
+
+				$('<div class="metadataCont">').
+					appendTo($('#info-display')).
+					append([
+						$('<div class="metadata metadataName">').append(dataObj.nameLabel),
+						$('<div class="metadata metadataValue">').append(dataObj.value)
+					]);
+			}
+		}
+	}
+}
+
 let uiModule = {
 	id: 'general-ui',
 	loader: function(setup) {
@@ -53,6 +80,8 @@ let uiModule = {
 
 			if(brick != null)
 				brick.getView().addClass('activeBrick');
+
+			updateInfoDisplay(brick);
 		}
 
 		function changeActiveBrickOfWall(wall, brick) {
@@ -258,6 +287,91 @@ let uiModule = {
 	}
 };
 
+let metadataModule = {
+	id: 'metadata',
+	loader: function(setup) {
+		let metadata = [];
+
+		function resolveData(dataDef) {
+			if(dataDef.staticVal != null)
+				return dataDef.staticVal;
+			else if(dataDef.dynVal != null)
+				return dataDef.dynVal();
+
+			return null;
+		}
+
+		setup.extend({
+			addData: function(name, nameLabel, defaultValue) {
+				let found = null;
+
+				for(let i = 0; i < metadata.length; i++) {
+					if(metadata[i].name == name)
+						found = metadata[i];
+				}
+
+				if(found == null) {
+					found = {
+						name, nameLabel, defaultValue, 
+						staticVal: null, 
+						dynVal: () => null
+					};
+
+					metadata.push(found);
+				}
+				else {
+					Object.assign(found, { nameLabel, defaultValue });
+				}
+			},
+			getData: function(name) {
+				for(let i = 0; i < metadata.length; i++) {
+					if(metadata[i].name == name)
+						return resolveData(metadata[i]);
+				}
+
+				return null;
+			},
+			getAllData: function() {
+				let res = [];
+
+				for(let i = 0; i < metadata.length; i++) {
+					let val = resolveData(metadata[i]);
+
+					res.push({
+						name: metadata[i].name,
+						nameLabel: metadata[i].nameLabel,
+						value: val == null ? '?': val
+					});
+				}
+
+				return res;
+			},
+			setStaticData: function(name, data) {
+				if(!data)
+					return;
+
+				for(let i = 0; i < metadata.length; i++) {
+					if(metadata[i].name == name) {
+						metadata[i].staticVal = data;
+						return;
+					}
+				}
+			},
+			setDynamicData: function(name, func) {
+				if(!func)
+					return;
+
+				for(let i = 0; i < metadata.length; i++) {
+					if(metadata[i].name == name) {
+						metadata[i].dynVal = func;
+						return;
+					}
+				}
+			}
+		});
+	}
+};
+
 let loadedUI = null;
 
 function getLoadedUI() {
@@ -265,6 +379,7 @@ function getLoadedUI() {
 }
 
 module.exports = {
+	metadata: metadataModule,
 	displayWalls: function(walls) {
 		let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: [] });
 		meta.load(uiModule);

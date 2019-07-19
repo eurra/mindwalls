@@ -19,17 +19,7 @@ module.exports = {
 		});
 
 		setup.on('onValueSet', function() {
-			let val = this.getValue();		
-			let text;
-
-			if(val == null)
-				text = '?';
-			else if(typeof val === 'number' && !Number.isSafeInteger(val))
-				text = val.toFixed(2);
-			else
-				text = val.toString();
-
-			this.getValueLabel().html(text);
+			this.getValueLabel().html(this.getFormattedValue());
 		});
 
 		setup.on('onNameSet', function() {
@@ -40,6 +30,19 @@ module.exports = {
 		});
 
 		setup.extend({
+			getFormattedValue: function() {
+				let val = this.getValue();		
+				let text;
+
+				if(val == null)
+					text = '?';
+				else if(typeof val === 'number' && !Number.isSafeInteger(val))
+					text = val.toFixed(2);
+				else
+					text = val.toString();
+
+				return text;
+			},
 			getValueContainer: function() {
 				return valueCont;
 			},

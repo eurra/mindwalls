@@ -4,12 +4,13 @@ let brickModule = {
 	id: 'literal',
 	loader: function(setup) {	
 		setup.import(mw.bricks.jqGeneric);
-		setup.import(mw.bricks.wallMember);
+		setup.import(mw.bricks.wallMember);		
 
 		let valueContainer = $('<div class="brick data"></div>');
 
 		setup.configure(function(brick) {			
 			brick.getContent().append(valueContainer);
+			brick.setStaticData('brick-type', 'Literal');
 		});
 
 		setup.on('onValueSet', function() {

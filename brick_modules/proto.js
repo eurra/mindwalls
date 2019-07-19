@@ -1,18 +1,18 @@
+let mw = require('../core/mindwalls.js');
+
 let baseModule = {
 	id: 'base',
 	loader: function(setup) {
 		let value = null;
 		let name = null;
-		let parent = null;		
+		let parent = null;
+
+		setup.import(mw.generalUI.metadata);		
 
 		setup.addEvents([
 			'onParentSet', 'onDisposed',
 			'onValueSet', 'onNameSet', 
 		]);
-
-		/*setup.on('onBeforeUnload', function() {
-			this.setValue(null);
-		});*/
 
 		setup.extend({
 			getParent: function() {
@@ -57,6 +57,12 @@ let baseModule = {
 					parent.onChildSetModified(this);
 				}
 			}
+		});
+
+		setup.configure(function(brick) {
+			brick.addData('value', "Value", "non set");
+			brick.addData('brick-type', "Brick type", "Brick");
+			brick.setDynamicData('value', () => brick.getFormattedValue());
 		});
 	}
 };
