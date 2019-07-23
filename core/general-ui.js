@@ -24,31 +24,16 @@ function getVerticalDistance(elem1, elem2) {
 	return Math.abs(e1m - e2m);
 }
 
-function updateInfoDisplay(brick) {
-	if(brick == null) {
-		$('#info-display').html('Select a brick to display info');
-	}
-	else {
-		let allData = brick.getAllData();
+function getPanelTitle() {
+	return $('#info-display-title');
+}
 
-		if(allData.length == 0) {
-			$('#info-display').html('No data related to brick');
-		}
-		else {
-			$('#info-display').html('<div>Selected brick:</div>&nbsp;');			
+function getPanelContainer() {
+	return $('#info-display');
+}
 
-			for(let i in allData) {
-				let dataObj = allData[i];
-
-				$('<div class="metadataCont">').
-					appendTo($('#info-display')).
-					append([
-						$('<div class="metadata metadataName">').append(dataObj.nameLabel),
-						$('<div class="metadata metadataValue">').append(dataObj.value)
-					]);
-			}
-		}
-	}
+function focus() {
+	$('#metabrick-area').focus();
 }
 
 let uiModule = {
@@ -73,36 +58,24 @@ let uiModule = {
 			return brick;
 		}
 
-		function switchToActiveBrickFromWall(wall) {
-			let brick = getActiveBrickFromWall(wall);
-
-			$('.activeBrick').removeClass('activeBrick');
-
-			if(brick != null)
-				brick.getView().addClass('activeBrick');
-
-			updateInfoDisplay(brick);
-		}
-
-		function changeActiveBrickOfWall(wall, brick) {
+		function changeActiveBrickOfWall(ui, wall, brick) {
 			if(brick != null && wall != null) {
 				activeBricksMap.set(wall, brick);
-				switchToActiveBrickFromWall(wall);
+				ui.onBrickActivation();
 			}
 		}
 
-		function changeActiveWall(wall) {
+		function changeActiveWall(ui, wall) {
 			if(wall != null) {
 				wall.mustBe('wall');
-				activeWall = wall;				
-				switchToActiveBrickFromWall(activeWall);
+				activeWall = wall;		
 
-				$('.activeWall').removeClass('activeWall');
-				wall.getContent().addClass('activeWall');
+				ui.onBrickActivation();
+				ui.onWallActivation();
 			}
 		}
 
-		function getClosestBrickOf(brick) {
+		function getClosestBrickOf(ui, brick) {
 			let currBrick = brick;						
 
 			if(currBrick != null) {
@@ -113,12 +86,12 @@ let uiModule = {
 					closestBrick = parentBrick.getNextSiblingOf(currBrick);
 
 					if(closestBrick != null)
-						changeActiveBrickOfWall(activeWall, closestBrick);
+						changeActiveBrickOfWall(ui, activeWall, closestBrick);
 					else if(!parentBrick.instanceOf('wall'))
-						changeActiveBrickOfWall(activeWall, parentBrick);
+						changeActiveBrickOfWall(ui, activeWall, parentBrick);
 				}
 				else {
-					changeActiveBrickOfWall(activeWall, closestBrick);	
+					changeActiveBrickOfWall(ui, activeWall, closestBrick);	
 				}
 			}
 		}
@@ -150,9 +123,64 @@ let uiModule = {
 			return target;
 		}
 
+		function updateBrickInfo(brick) {
+			getPanelTitle().html('');
+			getPanelContainer().html('');
+
+			if(brick == null) {
+				getPanelTitle().html('Select a brick to display info...');
+			}
+			else {
+				getPanelTitle().html('Selected brick:');
+				let allData = brick.getAllData();
+
+				if(allData.length == 0) {
+					getPanelContainer().html('No data related to brick');
+				}
+				else {
+					for(let i in allData) {
+						let dataObj = allData[i];
+
+						$('<div class="metadataCont">').
+							appendTo(getPanelContainer()).
+							append([
+								$('<div class="metadata metadataName">').append(dataObj.nameLabel),
+								$('<div class="metadata metadataValue">').append(dataObj.value)
+							]);
+					}
+				}
+			}
+		}
+
+		setup.addEvents([
+			'onBrickActivation', 'onWallActivation'
+		]);
+
 		setup.on('onChildAdded', function(child) {
 			if(activeWall == null)			
-				changeActiveWall(child);
+				changeActiveWall(this, child);
+		});
+
+		setup.on('onBrickActivation', function() {
+			if(activeWall == null)
+				return;
+
+			let brick = getActiveBrickFromWall(activeWall);
+
+			$('.activeBrick').removeClass('activeBrick');
+
+			if(brick != null)
+				brick.getContent().addClass('activeBrick');
+
+			updateBrickInfo(brick);
+		});
+
+		setup.on('onWallActivation', function() {
+			if(activeWall == null)
+				return;
+
+			$('.activeWall').removeClass('activeWall');
+			activeWall.getContent().addClass('activeWall');
 		});
 
 		setup.extend({
@@ -171,9 +199,9 @@ let uiModule = {
 				}
 
 				if(containerWall !== activeWall)
-					changeActiveWall(containerWall);
+					changeActiveWall(this, containerWall);
 
-				changeActiveBrickOfWall(containerWall, brick);
+				changeActiveBrickOfWall(this, containerWall, brick);
 			},
 			moveToUpperWall: function() {
 				if(activeWall == null)
@@ -183,7 +211,7 @@ let uiModule = {
 				let target = getClosestWall(nextWalls);
 
 				if(target != null)
-					changeActiveWall(target);
+					changeActiveWall(this, target);
 			},
 			moveToLowerWall: function() {
 				if(activeWall == null)
@@ -193,15 +221,15 @@ let uiModule = {
 				let target = getClosestWall(nextWalls);
 
 				if(target != null)
-					changeActiveWall(target);
+					changeActiveWall(this, target);
 			},
 			moveToRightWall: function() {
-				changeActiveWall(
+				changeActiveWall(this,
 					this.getNextSiblingOf(activeWall)
 				);
 			},
 			moveToLeftWall: function() {
-				changeActiveWall(
+				changeActiveWall(this,
 					this.getPrevSiblingOf(activeWall)
 				);
 			},
@@ -215,7 +243,7 @@ let uiModule = {
 					let parentBrick = currBrick.getParent();
 
 					if(parentBrick != null && !parentBrick.instanceOf('wall'))
-						changeActiveBrickOfWall(activeWall, parentBrick);
+						changeActiveBrickOfWall(this, activeWall, parentBrick);
 				}
 			},
 			moveToChildBrick: function() {
@@ -228,7 +256,7 @@ let uiModule = {
 					let childBrick = currBrick.getFirstChild();
 
 					if(childBrick != null)
-						changeActiveBrickOfWall(activeWall, childBrick);
+						changeActiveBrickOfWall(this, activeWall, childBrick);
 				}
 			},
 			moveToNextSiblingBrick: function() {
@@ -248,7 +276,7 @@ let uiModule = {
 					currBrick = parentBrick.getNextSiblingOf(currBrick);
 
 					if(currBrick !== null)
-						changeActiveBrickOfWall(activeWall, currBrick);
+						changeActiveBrickOfWall(this, activeWall, currBrick);
 				}
 			},
 			moveToPrevSiblingBrick: function() {
@@ -268,16 +296,16 @@ let uiModule = {
 					currBrick = parentBrick.getPrevSiblingOf(currBrick);
 
 					if(currBrick !== null)
-						changeActiveBrickOfWall(activeWall, currBrick);
+						changeActiveBrickOfWall(this, activeWall, currBrick);
 				}
 			},
 			removeActiveBrick: function() {
 				let currBrick = this.getActiveBrick();
 
 				if(currBrick != null) {
-					changeActiveBrickOfWall(
+					changeActiveBrickOfWall(this,
 						activeWall,
-						getClosestBrickOf(currBrick)
+						getClosestBrickOf(this, currBrick)
 					);
 
 					currBrick.dispose();
@@ -372,23 +400,31 @@ let metadataModule = {
 	}
 };
 
-let loadedUI = null;
-
-function getLoadedUI() {
-	return loadedUI;
-}
+let activeUI = null;
 
 module.exports = {
 	metadata: metadataModule,
+	focus,
+	getActiveUI: function() {
+		return activeUI;
+	},
+	getActiveBrick: function() {
+		if(activeUI == null)
+			return null;
+
+		return activeUI.getActiveBrick();
+	},
 	displayWalls: function(walls) {
 		let meta = mw.import.newBrick({ module: mw.bricks.meta, childs: [] });
 		meta.load(uiModule);
 		meta.addChilds(walls);
 
-		$('#metabrick-area').empty().focus();
-		meta.getView().appendTo('#metabrick-area').focus();
-		loadedUI = meta;
+		$('#metabrick-area').empty().append(meta.getView());
+
+		activeUI = meta;
+		focus();
 	},
+	getPanelTitle, getPanelContainer,
 	showInputDialog: function(config) {
 		let inputDialog = $(`<div title="${config.title}">`).
 			dialog({ 
@@ -429,71 +465,71 @@ module.exports = {
 	}
 };
 
-mw.actions.register(() => getLoadedUI(), [
+mw.actions.register([
 	{	// Move up between walls
 		ctrlKey: true,
 		key: 38,
-		action: function(target) {
-			target.moveToUpperWall();
+		action: function() {
+			activeUI.moveToUpperWall();
 		}
 	},
 	{
 		// Move down between walls
 		ctrlKey: true,
 		key: 40,
-		action: function(target) {
-			target.moveToLowerWall();
+		action: function() {
+			activeUI.moveToLowerWall();
 		}
 	},
 	{
 		// Move right between walls
 		ctrlKey: true,
 		key: 39,
-		action: function(target) {
-			target.moveToRightWall();
+		action: function() {
+			activeUI.moveToRightWall();
 		}
 	},
 	{
 		// Move left between walls
 		ctrlKey: true,
 		key: 37,
-		action: function(target) {
-			target.moveToLeftWall();
+		action: function() {
+			activeUI.moveToLeftWall();
 		}
 	},
 	{
 		// Move to parent (left) within wall
 		key: 37,
-		action: function(target) {
-			target.moveToParentBrick();
+		action: function() {
+			activeUI.moveToParentBrick();
 		}
 	},
 	{
 		// Move to child (right) within wall
 		key: 39,
-		action: function(target) {
-			target.moveToChildBrick();
+		action: function() {
+			activeUI.moveToChildBrick();
 		}
 	},
 	{
 		// Move to next sibling (down) within wall
 		key: 40,
-		action: function(target) {
-			target.moveToNextSiblingBrick();
+		action: function() {
+			activeUI.moveToNextSiblingBrick();
 		}
 	},
 	{
 		// Move to prev sibling (up) within wall
 		key: 38,
-		action: function(target) {
-			target.moveToPrevSiblingBrick();
+		action: function() {
+			activeUI.moveToPrevSiblingBrick();
 		}
 	},
 	{
 		// Supr - remove brick
 		key: 46,
-		action: function(target) {
-			target.removeActiveBrick();
+		action: function() {
+			activeUI.removeActiveBrick();
 		}
 	}
-]);
+], () => activeUI != null);

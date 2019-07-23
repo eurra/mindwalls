@@ -212,7 +212,7 @@ module.exports = {
 		setup.configure(function(brick) {
 			brick.getView().
 				css('height', '100%').
-				attr('tabindex', 0).
+				//attr('tabindex', 0).
 				append(
 					brick.getContent().
 						css('height', '100%').

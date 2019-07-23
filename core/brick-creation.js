@@ -12,7 +12,7 @@ module.exports = {
 	}
 };
 
-mw.actions.register([
+/*mw.actions.register([
 	{
 		// Insert - add after
 		key: 13,
@@ -33,7 +33,7 @@ mw.actions.register([
 			
 		}
 	}
-]);
+]);*/
 
 /*let addDialog = $(`<div title="Select brick type">`).
 				dialog({ 

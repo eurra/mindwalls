@@ -38,32 +38,35 @@ getTarget().keydown(function(e) {
 		key: e.which
 	};
 
-	let foundConfig = findConfig(config);	
+	let foundConfig = findConfig(config);
 
-	if(foundConfig.targetResolver && foundConfig.targetResolver().getView().is($(document.activeElement))) {
+	if(!foundConfig.trigger || foundConfig.trigger()) {
 		for(let i in foundConfig.handlers)
-			foundConfig.handlers[i](foundConfig.targetResolver(), e);
-	}
+			foundConfig.handlers[i](e);
 
-	e.preventDefault();
+		e.preventDefault();
+	}
 });
+
+function register(toRegister, genericTrigger) {
+	for(let i in toRegister) {
+		let entry = toRegister[i];
+
+		let config = {
+			shiftKey: entry.shiftKey ? entry.shiftKey : false,
+			ctrlKey: entry.ctrlKey ? entry.ctrlKey : false,
+			altKey: entry.altKey ? entry.altKey : false,
+			key: entry.key,
+			trigger: entry.trigger ? entry.trigger : genericTrigger
+		};
+
+		let foundConfig = findConfig(config);
+		foundConfig.handlers.push(entry.action);
+	}
+}
 
 module.exports = {
 	getTarget,
-	register: function(targetResolver, toRegister) {
-		for(let i in toRegister) {
-			let entry = toRegister[i];
-
-			let config = {
-				shiftKey: entry.shiftKey ? entry.shiftKey : false,
-				ctrlKey: entry.ctrlKey ? entry.ctrlKey : false,
-				altKey: entry.altKey ? entry.altKey : false,
-				key: entry.key,
-				targetResolver
-			};
-
-			let foundConfig = findConfig(config);
-			foundConfig.handlers.push(entry.action);
-		}
-	}
+	register
 };
+

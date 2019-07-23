@@ -25,7 +25,6 @@ body {
 	align-content: center;
 	flex-wrap: wrap;
 	height: 99%;
-	padding: 10px;
 }
 
 .wall {
@@ -77,7 +76,7 @@ body {
 	border: 2px solid grey;
 	border-radius: 5px;
 	font-weight: bolder;
-	background-color: white;
+	/*background-color: white;*/
 	flex: 1;
 }
 
@@ -152,12 +151,8 @@ body, html {
 	border-radius: 5px;
 }
 
-#info-display {
-	font-family: Tahoma, Geneva, sans-serif
-}
-
 .metadata {
-	border-radius: 5px;
+	/*border-radius: 5px;*/
 	font-size: small;
 	margin-left: 1px;
 	margin-right: 1px;
@@ -182,4 +177,9 @@ body, html {
 .metadataValue {
 	background-color: white;
 	border: 1px solid grey;
+}
+
+.literalEdit {
+	width: 50px;
+	font-size: smaller;
 }

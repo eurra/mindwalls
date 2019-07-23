@@ -303,11 +303,6 @@ let viewModule = {
 		setup.on('onDisposed', function() {
 			view.remove();
 		});
-
-		/*setup.on('onBeforeUnload', function() {
-			view.empty();
-			content.empty();
-		});*/
 	}
 };
 

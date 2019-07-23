@@ -17,12 +17,13 @@
 		<script>if (window.module) module = window.module;</script>
 	</head>
 
-	<body style="height: 98%;">	
-		<div style="width: 100%; padding: 5px; border-bottom: 1px dashed grey; z-index: 1; position: absolute; background-color: white; margin-bottom: 10px;">
-			<div style="font-style: italic; font-size: small; padding-bottom: 10px;">Mindwalls v0.0.1 - by Enrique Urra</div>
-			<div id="info-display" style="margin: 5px; text-align: center; display: flex; justify-content: center; align-items: center; line-height: 20px; font-size: larger;"></div>
+	<body style="display: flex; flex-direction: column;">	
+		<div style="font-family: Tahoma, Geneva, sans-serif; padding: 5px; border-bottom: 1px dashed grey; background-color: white; text-align: center; flex: 1;">
+			<div style="font-size: small; float: left;">Mindwalls <b>v0.0.1</b> - by Enrique Urra</div>
+			<div id="info-display-title" style="font-weight: bold; clear: both;"></div>
+			<div id="info-display" style="margin: 5px; text-align: center; display: flex; justify-content: center; align-items: center; font-size: larger; line-height: 20px;"></div>
 		</div>
 
-		<div id="metabrick-area" style="height: 99%;"></div>		
+		<div id="metabrick-area" tabindex="1" style="flex: 7; margin: 1px;"></div>		
 	</body>
 </html>

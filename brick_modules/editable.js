@@ -7,10 +7,32 @@ mw.actions.register([
 		// F2 - edit
 		key: 113,
 		action: function() {
-			let activeBrick = mw.generalUI.getMeta().getActiveBrick();
+			let activeBrick = mw.generalUI.getActiveBrick();
+			
+			if(activeBrick != null && activeBrick.instanceOf('editable')) {	
+				mw.generalUI.getPanelTitle().html('Edit literal brick...');
+				mw.generalUI.getPanelContainer().html('');
 
-			if(activeBrick != null && activeBrick.instanceOf('editable')) {
-				let config = {
+				activeBrick.getContent().children().hide();
+
+				$('<input class="literalEdit" type="text" value="' + activeBrick.getValue() + '"/>').
+					appendTo(activeBrick.getContent()).
+					select().
+					keydown(function(e) {
+						switch(e.which) {
+							case 13: {
+								let val = $(this).val();							
+								activeBrick.setValue(val);
+							}
+							case 27: {
+								$(this).remove();
+								activeBrick.getContent().children().show();
+								mw.generalUI.focus();
+							}
+						}
+					});
+
+				/*let config = {
 					title: 'Edit brick',
 					placeholder: 'Enter text for edit the brick',
 					relativeTo: activeBrick.getView(),					
@@ -31,7 +53,7 @@ mw.actions.register([
 				if(defVal)
 					config.defaultValue = defVal;
 
-				mw.generalUI.showInputDialog(config);
+				mw.generalUI.showInputDialog(config);*/
 			}
 		}
 	}

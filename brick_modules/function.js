@@ -88,10 +88,12 @@ module.exports = {
 			brick.getContent().append(content);
 			brick.getValueContainer().css('display', '');
 
-			brick.addData('func-name', 'Function Name', "no name");
+			brick.addData('func-id', 'ID', "no id");
+			brick.addData('func-name', 'Name', "no name");
 			brick.addData('func-desc', 'Description', "no desc");
 			brick.setStaticData('brick-type', 'Function');
-			brick.setStaticData('func-name', config.id);
+			brick.setStaticData('func-id', config.id);
+			brick.setStaticData('func-name', def.name);
 			brick.setStaticData('func-desc', def.description);
 
 			/*brick.view.getChildrenContainer().

@@ -1,6 +1,6 @@
 module.exports = {
 	'+': {
-		name: 'Addition operation',
+		name: 'Addition',
 		description: 'Sum of numbers',
 		paramSet: {
 			type: 'array',
@@ -17,7 +17,7 @@ module.exports = {
 		}			
 	},
 	'-': {
-		name: 'Substraction operation',
+		name: 'Substraction',
 		description: 'Substraction of numbers',
 		paramSet: {
 			type: 'array',
@@ -34,7 +34,7 @@ module.exports = {
 		}
 	},
 	'/': {
-		name: 'Division operation',
+		name: 'Division',
 		description: 'Division of numbers',
 		paramSet: {
 			type: 'array',
@@ -51,7 +51,7 @@ module.exports = {
 		}
 	},
 	'<': {
-		name: 'Less than operator',
+		name: 'Less than',
 		description: 'Returns true if the first argument is less than the second',
 		paramSet: {
 			type: 'array',
@@ -62,7 +62,7 @@ module.exports = {
 		}			
 	},
 	'floor': {
-		name: 'Floor of a number',
+		name: 'Floor of',
 		description: 'Returns nearest integer lower than the input',
 		paramSet: {
 			type: 'map',
