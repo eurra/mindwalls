@@ -80,6 +80,10 @@ body {
 	flex: 1;
 }
 
+.data, .funcName {
+	cursor: pointer;
+}
+
 .then {
 	border: 1px solid grey;
 	padding-left: 2px;
@@ -141,6 +145,10 @@ body, html {
 	background-color: #d4f2ff;
 }
 
+.pointedBrick {
+	border: 1px solid green;
+}
+
 .wide {
 	flex: 1;
 }
@@ -153,7 +161,7 @@ body, html {
 
 .metadata {
 	/*border-radius: 5px;*/
-	font-size: small;
+	font-size: x-small;
 	margin-left: 1px;
 	margin-right: 1px;
 	padding-left: 2px;
@@ -172,14 +180,17 @@ body, html {
 	background-color: blue;
 	color: white;
 	font-weight: bold;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
 }
 
 .metadataValue {
 	background-color: white;
 	border: 1px solid grey;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 
 .literalEdit {
-	width: 50px;
 	font-size: smaller;
 }

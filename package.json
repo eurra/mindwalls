@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron": "^4.0.1"
+    "electron": "^4.0.1",
+    "hotkeys-js": "^3.6.12"
   },
   "devDependencies": {
     "eslint": "^5.15.0"

@@ -1,82 +1,42 @@
 let mw = require('../core/mindwalls.js');
+let hotkeys = require('hotkeys-js');
 
-let editConfigs = [];
-
-mw.actions.register([
-	{
-		// F2 - edit
-		key: 113,
-		action: function() {
-			let activeBrick = mw.generalUI.getActiveBrick();
+hotkeys('f2', 'general-ui', function() {
+	let activeBrick = mw.generalUI.getActiveBrick();
 			
-			if(activeBrick != null && activeBrick.instanceOf('editable')) {	
-				mw.generalUI.getPanelTitle().html('Edit literal brick...');
-				mw.generalUI.getPanelContainer().html('');
+	if(activeBrick != null && activeBrick.instanceOf('editable')) {	
+		mw.generalUI.getPanelTitle().html('Edit brick...');
+		mw.generalUI.getPanelContainer().html('');
+		hotkeys.setScope('edit-brick');
 
-				activeBrick.getContent().children().hide();
-
-				$('<input class="literalEdit" type="text" value="' + activeBrick.getValue() + '"/>').
-					appendTo(activeBrick.getContent()).
-					select().
-					keydown(function(e) {
-						switch(e.which) {
-							case 13: {
-								let val = $(this).val();							
-								activeBrick.setValue(val);
-							}
-							case 27: {
-								$(this).remove();
-								activeBrick.getContent().children().show();
-								mw.generalUI.focus();
-							}
-						}
-					});
-
-				/*let config = {
-					title: 'Edit brick',
-					placeholder: 'Enter text for edit the brick',
-					relativeTo: activeBrick.getView(),					
-					handle: function(textVal) {
-						for(let i = 0; i < editConfigs.length; i++) {
-							let parsedCfg = editConfigs[i].parse.apply(activeBrick, [ textVal ]);							
-
-							if(parsedCfg) {
-								activeBrick._reset();
-								activeBrick._import(parsedCfg.module, parsedCfg);
-							}
-						}
-					}
-				};
-
-				let defVal = activeBrick.getEditableTextHandler().apply(activeBrick);
-
-				if(defVal)
-					config.defaultValue = defVal;
-
-				mw.generalUI.showInputDialog(config);*/
-			}
-		}
+		activeBrick.getEditHandler()(activeBrick, function(brick) {
+			mw.generalUI.getActiveUI().changeActiveBrick(brick);
+			hotkeys.deleteScope('edit-brick');
+			hotkeys.setScope('general-ui');
+		});
 	}
-]);
+});
 
 module.exports = {
 	id: 'editable',
 	loader: function(setup) {
-		let editableTextHander = function() {
-			return this.getValue();
+		setup.import(mw.bricks.clickable);		
+
+		let editHandler = function(brick, readyCallback) {
+			readyCallback(brick);
 		};
 
 		setup.extend({
-			setEditableTextHandler: function(handler) {
-				editableTextHander = handler;
+			setEditHandler: function(handler) {
+				editHandler = handler;
 			},
-			getEditableTextHandler: function() {
-				return editableTextHander;
+			getEditHandler: function() {
+				return editHandler;
 			}
 		});
-	},
-	registerConfig: function(config) {
-		if(config)
-			editConfigs.push(config);
+
+		setup.configure(function(brick) {
+			
+		});
 	}
 };

@@ -404,7 +404,6 @@ let activeUI = null;
 
 module.exports = {
 	metadata: metadataModule,
-	focus,
 	getActiveUI: function() {
 		return activeUI;
 	},
@@ -465,71 +464,46 @@ module.exports = {
 	}
 };
 
-mw.actions.register([
-	{	// Move up between walls
-		ctrlKey: true,
-		key: 38,
-		action: function() {
-			activeUI.moveToUpperWall();
-		}
-	},
-	{
-		// Move down between walls
-		ctrlKey: true,
-		key: 40,
-		action: function() {
-			activeUI.moveToLowerWall();
-		}
-	},
-	{
-		// Move right between walls
-		ctrlKey: true,
-		key: 39,
-		action: function() {
-			activeUI.moveToRightWall();
-		}
-	},
-	{
-		// Move left between walls
-		ctrlKey: true,
-		key: 37,
-		action: function() {
-			activeUI.moveToLeftWall();
-		}
-	},
-	{
-		// Move to parent (left) within wall
-		key: 37,
-		action: function() {
-			activeUI.moveToParentBrick();
-		}
-	},
-	{
-		// Move to child (right) within wall
-		key: 39,
-		action: function() {
-			activeUI.moveToChildBrick();
-		}
-	},
-	{
-		// Move to next sibling (down) within wall
-		key: 40,
-		action: function() {
-			activeUI.moveToNextSiblingBrick();
-		}
-	},
-	{
-		// Move to prev sibling (up) within wall
-		key: 38,
-		action: function() {
-			activeUI.moveToPrevSiblingBrick();
-		}
-	},
-	{
-		// Supr - remove brick
-		key: 46,
-		action: function() {
-			activeUI.removeActiveBrick();
-		}
-	}
-], () => activeUI != null);
+let hotkeys = require('hotkeys-js');
+
+hotkeys('ctrl+up', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToUpperWall();
+});
+
+hotkeys('ctrl+down', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToLowerWall();
+});
+
+hotkeys('ctrl+left', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToLeftWall();
+});
+
+hotkeys('ctrl+right', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToRightWall();
+});
+
+hotkeys('right', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToChildBrick();
+});
+
+hotkeys('left', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToParentBrick();
+});
+
+hotkeys('down', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToNextSiblingBrick();
+});
+
+hotkeys('up', 'general-ui', function() {
+	if(activeUI != null) activeUI.moveToPrevSiblingBrick();
+});
+
+hotkeys('delete', 'general-ui', function() {
+	if(activeUI != null) activeUI.removeActiveBrick();
+});
+
+hotkeys.setScope('general-ui');
+
+hotkeys.filter = function(){
+  return true;
+};
