@@ -8,3 +8,12 @@ suma.addParam(Const(1));
 suma.addParam(Const(2));
 
 console.log(suma.getOutput());
+
+let num = Var();
+num.setVal(5);
+suma.addParam(num);
+
+console.log(suma.getOutput());
+
+num.setVal(2);
+console.log(suma.getOutput());

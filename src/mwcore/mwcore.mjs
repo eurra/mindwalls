@@ -1,25 +1,10 @@
-const builder = function() {
-    let target = {
-        attach: function(decorator, ...args) {
-            decorator(this, ...args);
-            return this;
-        }
-    }; 
-
-    return target.attach(base);
-};
-
-const base = function(target) {
+const builder = function(dataCfg) {
+    let target = {};
     let output = null;
-    let outputProcessor = null; // Computes the brick data 
-    let parent = null; // Parent brick
-    let markChanged = true;
+    let outputProcessor = null;
 
     target.getOutput = function() {
-        if(markChanged) {
-            output = outputProcessor ? outputProcessor() : null;
-            markChanged = false;
-        }
+        output = outputProcessor ? outputProcessor() : null;
 
         return output;
     };
@@ -28,22 +13,9 @@ const base = function(target) {
         outputProcessor = processor;
     };
 
-    target.setParent = function(p) {
-        parent = p;
-    };
-
     target.markChanged = function() {
         markChanged = true;
     }
-
-    /*target.update = function(updateWall = true) {
-        output = outputProcessor ? outputProcessor() : null;
-
-        if(updateWall && parent && parent.onChildUpdated)
-            parent.onChildUpdated(this, output);
-
-        return output;
-    };   */ 
 
     target.toString = function() {
         return 'brick = ' + this.getOutput();
@@ -63,7 +35,7 @@ export function Var() {
     let target = builder();
     let data = null;
 
-    target.setData = function(d) {
+    target.setVal = function(d) {
         data = d;
     };
 
@@ -79,9 +51,7 @@ export function ArrayFunction(func) {
         if(pos == -1)
             pos = params.length;
 
-        params.push(param);
-        console.log(param);
-        this.markChanged();
+        params.push(this.asChild(param));
     };
 
     target.setOutputProcessor(function(){
