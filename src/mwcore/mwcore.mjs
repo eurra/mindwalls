@@ -1,87 +1,277 @@
-const builder = function(dataCfg) {
-    let target = {};
-    let output = null;
-    let outputProcessor = null;
+export function Brick() {};
 
-    target.getOutput = function() {
-        output = outputProcessor ? outputProcessor() : null;
+export function checkBrick(val) {
+    if(!(val instanceof Brick))
+        throw 'Brick expected';
 
-        return output;
+    return val;
+}
+
+export const BrickBuilder = function() {
+    let mods = new Set();
+    let exts = new Map();
+    let extsOrder = [];
+    let wraps = new Map();
+    let shared = new Map();
+
+    let innerBuilder = {
+        require: function(mod, ...args) {
+            if(!mods.has(mod)) {
+                mods.add(mod);
+                mod(this, ...args);                
+            }
+
+            return this;
+        },
+        extend: function(name, func) {
+            if(!exts.has(name)) {
+                exts.set(name, func);
+                extsOrder.push(name);
+            }
+
+            return this;
+        },
+        wrap: function(name, wrapper) {
+            let currWraps;
+
+            if(wraps.has(name)) {
+                currWraps = wraps.get(name);
+            }
+            else {
+                currWraps = [];
+                wraps.set(name, currWraps);
+            }
+
+            currWraps.push(wrapper);
+            return this;
+        },
+        share: function(name, data) {
+            shared.set(name, data);
+            return this;
+        },
+        getShared: function(name) {
+            return function() {
+                if(shared.has(name))
+                    return shared.get(name);
+                
+                return null;
+            };
+        }
     };
 
-    target.setOutputProcessor = function(processor) {
-        outputProcessor = processor;
+    return {
+        require: innerBuilder.require,
+        extend: innerBuilder.extend,
+        wrap: innerBuilder.wrap,
+        share: innerBuilder.share,
+        getShared: innerBuilder.getShared,
+        ready: function() {
+            let brick = new Brick();
+
+            brick.is = function(mod) {
+                return mods.has(mod);
+            };
+
+            for(let i in extsOrder) {
+                let ext = exts.get(extsOrder[i]);
+                brick[extsOrder[i]] = ext;
+            }
+
+            for(let [name, specificWraps] of wraps) {
+                for(let i in specificWraps) {
+                    let wrapper = specificWraps[i];
+                    let currFunc = brick[name];
+
+                    brick[name] = function(...args) {
+                        return wrapper(currFunc, ...args);
+                    };
+                }                
+            }
+
+            return brick;
+        }
     };
-
-    target.markChanged = function() {
-        markChanged = true;
-    }
-
-    target.toString = function() {
-        return 'brick = ' + this.getOutput();
-    }
-
-    return target;
 };
 
-export function Const(value) {
-    let target = builder();
-    target.setOutputProcessor(() => value);
+/*const changeEmitter = function(builder) {
+    let listeners = null;
 
-    return target;
-}
+    builder.
+        extend('addListener', function(listener) {
+            if(listeners == null)
+                listeners = [];
+    
+            listeners.push(listener);
+            return this;
+        }).
+        extend('emitChange', function() {
+            if(listeners != null) {
+                for(let i in listeners)
+                    listeners[i].onEmmiterChange(this);
+            }
+        });
+};
 
-export function Var() {
-    let target = builder();
-    let data = null;
+const changeListener = function(builder) {
+    builder.extend('onEmmiterChange', () => {});
+};
 
-    target.setVal = function(d) {
-        data = d;
-    };
+const deepFreeze = x => {
+    Object.freeze(x);
+    Object.values(x).filter(x => !Object.isFrozen(x)).forEach(deepFreeze);
+};
+*/
 
-    target.setOutputProcessor(() => data);
-    return target;
-}
+const BaseBrick = function(builder) {
+    builder.
+        /*extend('getResult', function() {
+            return null;
+        }).*/
+        extend('toString', function() {
+            return 'brick = ' + this.getResult();
+        });
+};
 
-export function ArrayFunction(func) {
-    let target = builder();
-    let params = [];
+const ImmutableBrick = function(builder, value) {
+    let innerVal = value;
 
-    target.addParam = function(param, pos = -1) {
-        if(pos == -1)
-            pos = params.length;
+    builder.
+        require(BaseBrick).
+        extend('getResult', () => value);
 
-        params.push(this.asChild(param));
-    };
+    if(typeof innerVal == 'object')
+        deepFreeze(innerVal);
+};
 
-    target.setOutputProcessor(function(){
-        let finalParams = [];        
-        params.forEach(val => finalParams.push(val ? val.getOutput() : null));
+const CachedBrick = function(builder) {
+    let output = null;
+    let changed = true;
+    let listeners = new Set();
 
-        return func(...finalParams)
-    });
+    builder.
+        require(BaseBrick).
+        wrap('getResult', function(wrapped) {
+            if(changed) {
+                output = wrapped();
+                changed = false;
+            }
 
-    return target;
-}
+            return output;
+        }).
+        extend('addListener', function(target) {
+            checkBrick(target);
 
-export function ObjectFunction(func) {
-    let target = builder();
-    let params = {};
+            if(!listeners.has(target))
+                listeners.add(target);
+        }).
+        extend('markChanged', function(source) {            
+            changed = true;
 
-    target.addParam = function(name, param) {
-        params[name] = param;
-        this.markChanged();
-    };
+            for(let listener of listeners)
+                listener.markChanged();
 
-    target.setOutputProcessor(function(){
-        let finalParams = {};
+            if(source && checkBrick(source) && source.is(CachedBrick))
+                source.addListener(this);                
+        });
+};
 
-        for (let [key, value] of Object.entries(params)) {
-            finalParams[key] = value.getOutput();
-        }
+const MapBasedBrick = function(builder) {
+    let data = {};
 
-        return func(finalParams);
-    });
+    builder.
+        require(CachedBrick).
+        share('innerMap', data).
+        extend('setProp', function(name, value) {
+            checkBrick(value);
+            data[name] = value;
+            this.markChanged(value);
+        }).
+        extend('getProp', function(name) {
+            return data[name];
+        });
+};
 
-    return target;
-}
+const ArrayBasedBrick = function(builder) {
+    let data = [];
+
+    builder.
+        require(CachedBrick).
+        share('innerArray', data).
+        extend('setPos', function(index, value) {
+            checkBrick(value);
+            data.splice(index, 0, value);
+            this.markChanged(value);
+        }).
+        extend('append', function(value) {
+            this.setPos(data.length, value);
+        }).
+        extend('getPos', function(index) {
+            return data[index];
+        });
+};
+
+export function ConstBrick(builder, value) {
+    builder.require(ImmutableBrick, value);
+};
+
+export function VarBrick(builder, initVal = null) {
+    let value = initVal;
+    
+    builder.
+        require(CachedBrick).
+        extend('getResult', () => value).
+        extend('setValue', function(d) {
+            value = d;
+            this.markChanged();
+        });
+};
+
+export function MapBrick(builder) {
+    let getData = builder.getShared('innerMap');
+
+    builder.
+        require(MapBasedBrick).
+        extend('getResult', function() {
+            let data = getData();
+            let res = {};
+
+            for(let [prop, val] of Object.entries(data))
+                res[prop] = val.getResult();
+
+            return res;
+        });
+};
+
+export function ArrayBrick(builder) {
+    let getData = builder.getShared('innerArray');
+
+    builder.
+        require(ArrayBasedBrick).
+        extend('getResult', function() {
+            let data = getData();
+            let res = [];
+
+            for(let i in data)
+                res[i] = data[i].getResult();
+
+            return res;
+        });
+};
+
+export function MapFunctionBrick(builder, func) {
+    builder.
+        require(MapBrick).
+        wrap('getResult', function(wrapped) {
+            let res = wrapped();
+            return func(res);
+        });
+};
+
+export function ArrayFunctionBrick(builder, func) {
+    builder.
+        require(ArrayBrick).
+        wrap('getResult', function(wrapped) {
+            let res = wrapped();            
+            return func(...res);
+        });
+};
