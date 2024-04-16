@@ -1,4 +1,19 @@
-import { BrickBuilder as builder, ConstBrick, VarBrick, ArrayBrick, ArrayFunctionBrick, MapBrick, MapFunctionBrick } from "./mwcore.mjs";
+import * as mw from "./mindwalls.mjs";
+import { outputMod, cachedMod, arrayFuncMod } from "./coreMods.mjs";
+
+mw.mods.register('suma', function(builder) {
+    builder.attach(arrayFuncMod, 
+        (...nums) => nums.reduce((sum, curr) => sum + curr, 0)
+    );
+});
+
+let loader = mw.loader().setDefault(outputMod).setDefault(cachedMod);
+
+let suma = loader.make.suma().
+    append(loader.make.const(1)).
+    append(loader.make.const(2));
+
+console.log(suma.log());
 
 function proto() {
     let pow_ = mw.make.ref();
@@ -35,7 +50,7 @@ function proto() {
     mw.for(num4_).set(10);
     console.log(pow_);
 }
-
+/*
 let suma = builder().require(ArrayFunctionBrick,
     (...nums) => nums.reduce((sum, curr) => sum + curr, 0)
 ).ready();
@@ -61,8 +76,4 @@ pow.setProp('exp', num4);
 console.log(pow.getResult());
 
 num4.setValue(10);
-console.log(pow.getResult());
-
-/*
-let num1 = ConstBrick(builder(), 1).ready();
-let num2 = ConstBrick(builder(), 2).ready();*/
+console.log(pow.getResult());*/
