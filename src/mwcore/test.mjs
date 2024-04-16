@@ -10,11 +10,12 @@ function proto() {
             (...nums) => nums.reduce((sum, curr) => sum + curr, 0)
         ).
         append(mw.make.const(1)).
+        //append(mw.make(const, 1)).
         append(mw.make.const(2));
 
     console.log(
         mw.for(suma).append(
-            mw.link(num3_).to(mw.create.var(4))
+            mw.link(num3_).to(mw.make.var(4))
         )
     );
 
@@ -23,11 +24,11 @@ function proto() {
 
     console.log(
         mw.link(pow_).to(
-            mw.create.mapFunc(
+            mw.make.mapFunc(
                 ({ base, exp }) => Math.pow(base, exp)
             ).
-            setProp('base', mw.create.const(2)).
-            setProp('exp', mw.link(num4_).to(mw.create.var(8)))
+            setProp('base', mw.make.const(2)).
+            setProp('exp', mw.link(num4_).to(mw.make.var(8)))
         )
     );
 

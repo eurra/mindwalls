@@ -1,14 +1,4 @@
-
-export function Brick() {};
-
-export function checkBrick(val) {
-    if(!(val instanceof Brick))
-        throw 'Brick expected';
-
-    return val;
-}
-
-export const BrickBuilder = function() {
+const _brickBuilder = function() {
     let mods = new Set();
     let exts = new Map();
     let extsOrder = [];
@@ -94,63 +84,31 @@ export const BrickBuilder = function() {
     };
 };
 
-/*const changeEmitter = function(builder) {
-    let listeners = null;
-
+const baseMod = function(builder) {
     builder.
-        extend('addListener', function(listener) {
-            if(listeners == null)
-                listeners = [];
-    
-            listeners.push(listener);
-            return this;
-        }).
-        extend('emitChange', function() {
-            if(listeners != null) {
-                for(let i in listeners)
-                    listeners[i].onEmmiterChange(this);
-            }
-        });
-};
-
-const changeListener = function(builder) {
-    builder.extend('onEmmiterChange', () => {});
-};
-
-const deepFreeze = x => {
-    Object.freeze(x);
-    Object.values(x).filter(x => !Object.isFrozen(x)).forEach(deepFreeze);
-};
-*/
-
-const BaseBrick = function(builder) {
-    builder.
-        /*extend('getResult', function() {
-            return null;
-        }).*/
         extend('toString', function() {
             return 'brick = ' + this.getResult();
         });
 };
 
-const ImmutableBrick = function(builder, value) {
+const immutableMod = function(builder, value) {
     let innerVal = value;
 
     builder.
-        require(BaseBrick).
+        require(baseMod).
         extend('getResult', () => value);
 
     if(typeof innerVal == 'object')
         deepFreeze(innerVal);
 };
 
-const CachedBrick = function(builder) {
+const constBrick = function(builder) {
     let output = null;
     let changed = true;
     let listeners = new Set();
 
     builder.
-        require(BaseBrick).
+        require(baseMod).
         wrap('getResult', function(wrapped) {
             if(changed) {
                 output = wrapped();
@@ -176,11 +134,11 @@ const CachedBrick = function(builder) {
         });
 };
 
-const MapBasedBrick = function(builder) {
+const mapBasedMod = function(builder) {
     let data = {};
 
     builder.
-        require(CachedBrick).
+        require(cachedMod).
         share('innerMap', data).
         extend('setProp', function(name, value) {
             checkBrick(value);
@@ -192,11 +150,11 @@ const MapBasedBrick = function(builder) {
         });
 };
 
-const ArrayBasedBrick = function(builder) {
+const arrayBasedMod = function(builder) {
     let data = [];
 
     builder.
-        require(CachedBrick).
+        require(cachedMod).
         share('innerArray', data).
         extend('setPos', function(index, value) {
             checkBrick(value);
@@ -211,15 +169,11 @@ const ArrayBasedBrick = function(builder) {
         });
 };
 
-export function ConstBrick(builder, value) {
-    builder.require(ImmutableBrick, value);
-};
-
-export function VarBrick(builder, initVal = null) {
+const varMod = function(builder, initVal = null) {
     let value = initVal;
     
     builder.
-        require(CachedBrick).
+        require(cachedMod).
         extend('getResult', () => value).
         extend('setValue', function(d) {
             value = d;
@@ -227,11 +181,11 @@ export function VarBrick(builder, initVal = null) {
         });
 };
 
-export function MapBrick(builder) {
+const mapMod = function(builder) {
     let getData = builder.getShared('innerMap');
 
     builder.
-        require(MapBasedBrick).
+        require(mapBasedMod).
         extend('getResult', function() {
             let data = getData();
             let res = {};
@@ -275,4 +229,41 @@ export function ArrayFunctionBrick(builder, func) {
             let res = wrapped();            
             return func(...res);
         });
+};
+
+let modsLoaded = {
+    base: baseMod, 
+    immutable: immutableMod,
+    cached: cachedMod, 
+    mapBased: mapBasedMod, 
+    arrayBased: arrayBasedMod,
+
+};
+
+let makeHandler = {
+    get(target, prop, receiver) {
+        if(!modsLoaded[prop])
+            throw `Mod ${prop} not loaded.`;
+
+        return modsLoaded[prop];
+    }
+};
+
+export const mindWalls = {
+    make: new Proxy({}, makeHandler),
+    for: function(target) {
+
+    },
+    link: function(ref) {
+        
+    },
+    mods: {
+        load: function(modBuilder) {
+            if(!modsLoaded[modSpec.id]) {
+                modsLoaded[modSpec.id] = function(...args) {
+                    return _brickBuilder().require(modBuilder, ...args,).ready();
+                };
+            }                
+        }
+    }
 };
