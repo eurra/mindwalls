@@ -7,7 +7,7 @@ mw.mods.register('suma', function(builder) {
     );
 });
 
-let loader = mw.loader().setDefault(outputMod).setDefault(cachedMod);
+let loader = mw.loader().setDefault(outputMod)/*.setDefault(cachedMod)*/;
 
 let suma = loader.make.suma().
     append(loader.make.const(1)).
