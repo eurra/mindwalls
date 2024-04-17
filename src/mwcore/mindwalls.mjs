@@ -2,40 +2,6 @@ import * as coreMods from "./coreMods.mjs";
 
 export function Brick() {};
 
-function proxify(object, change) {
-    // we use unique field to determine if object is proxy
-    // we can't test this otherwise because typeof and
-    // instanceof is used on original object
-    if (object && object.__proxy__) {
-         return object;
-    }
-    var proxy = new Proxy(object, {
-        get: function(object, name) {
-            if (name == '__proxy__') {
-                return true;
-            }
-            return object[name];
-        },
-        set: function(object, name, value) {
-            var old = object[name];
-            if (value && typeof value == 'object') {
-                // new object need to be proxified as well
-                value = proxify(value, change);
-            }
-            object[name] = value;
-            change(object, name, old, value);
-        }
-    });
-    for (var prop in object) {
-        if (object.hasOwnProperty(prop) && object[prop] &&
-            typeof object[prop] == 'object') {
-            // proxify all child objects
-            object[prop] = proxify(object[prop], change);
-        }
-    }
-    return proxy;
-}
-
 const _brickBuilder = function() {
     let mods = new Set();
     let exts = new Map();
@@ -125,12 +91,10 @@ const _brickBuilder = function() {
                 if(!eventHandlers.has(eventId))
                     throw `Event handler "${eventId}" is not registered in this brick.`;
 
-                if(eventListeners.has(eventId)) {
-                    let listeners = eventListeners.get(eventId);
+                let listeners = eventListeners.get(eventId);
 
-                    for(let i in listeners)
-                        listeners[i].bind(this)(...args);
-                }
+                for(let i in listeners)
+                    listeners[i].bind(this)(...args);
             };
 
             /*brick.brick = function(b_brick) {
@@ -142,13 +106,11 @@ const _brickBuilder = function() {
 
             for(let i in extsOrder) {
                 let ext = exts.get(extsOrder[i]);
-                brick[extsOrder[i]] = ext;
+                brick[extsOrder[i]] = ext;                
             }
 
-            //console.log(brick);
-
             for(let [name, specificWraps] of wraps) {
-                for(let i in specificWraps) {
+                for(let i = specificWraps.length - 1; i >= 0; i--) {
                     let wrapper = specificWraps[i];
                     let currFunc = brick[name];
 
@@ -175,6 +137,7 @@ let modsRepo = {
     cache: coreMods.cacheMod,
     const: coreMods.constMod, 
     var: coreMods.varMod,
+    ref: coreMods.refMod,
     mapBased: coreMods.mapBasedMod,
     map: coreMods.mapMod,
     mapFunc: coreMods.mapFuncMod,
@@ -199,7 +162,7 @@ let makeHandler = function(defaultMods) {
                 return builder.ready();
             };
         }
-    }    
+    };
 };
 
 export const mods = {
@@ -217,9 +180,6 @@ export const loader = function() {
 
     return {
         make: new Proxy({}, makeHandler(defaultMods)),
-        link(ref) {
-            
-        },
         setDefault(mod, ...args) {
             defaultMods.set(mod, args);
             return this;

@@ -1,11 +1,18 @@
 export const outputMod = function(builder, outputFunc = null) {
+    let name = null;
+
     if(outputFunc == null) {
         outputFunc = function() {
-            return 'brick= ' + this.getResult();
+            return `brick ${name ? `(${name}) ` : ''}= ${this.getResult()}`;
         };
-    }
+    }    
 
-    builder.implement('log', outputFunc);
+    builder.
+        implement('print', outputFunc).
+        implement('setName', function(n) {
+            name = n;
+            return this;
+        });
 };
 
 const deepFreeze = x => {
@@ -28,20 +35,66 @@ export const dataMod = function(builder) {
         });
 }
 
-export const cacheMod = function(builder) {
-    let output = null;
-    let changed = true;
-    let listeners = new Set();
-
-    builder.
-        wrap('getResult', function(wrapped) {
-            if(changed) {
-                output = wrapped();
-                changed = false;
+function proxify(object, change) {
+    // we use unique field to determine if object is proxy
+    // we can't test this otherwise because typeof and
+    // instanceof is used on original object
+    if (object && object.__proxy__) {
+         return object;
+    }
+    var proxy = new Proxy(object, {
+        get: function(object, name) {
+            if (name == '__proxy__') {
+                return true;
             }
 
-            return output;
+            return object[name];
+        },
+        set: function(object, name, value) {
+            var old = object[name];
+            if (value && typeof value == 'object') {
+                // new object need to be proxified as well
+                value = proxify(value, change);
+            }
+            object[name] = value;
+            change(object, name, old, value);
+        }
+    });
+    for (var prop in object) {
+        if (object.hasOwnProperty(prop) && object[prop] &&
+            typeof object[prop] == 'object') {
+            // proxify all child objects
+            object[prop] = proxify(object[prop], change);
+        }
+    }
+    return proxy;
+}
+
+export const changeTracker = function(builder) {
+    
+}
+
+export const cacheMod = function(builder) {
+    builder.load(dataMod);
+    let cache = null;
+    let outdated = true;
+
+    builder.
+        addEventListener('onDataSet', function(e, id, data) {
+            outdated = true;
+
+            /*if(typeof data == 'object') {
+                value = proxify(value, change);
+            }*/
         }).
+        wrap('getResult', function(wrapped) {
+            if(outdated) {                
+                outdated = false;                
+                cache = wrapped();                
+            }
+
+            return cache;
+        })/*.
         implement('addListener', function(target) {
             if(!listeners.has(target))
                 listeners.add(target);
@@ -58,7 +111,7 @@ export const cacheMod = function(builder) {
                 source.addListener(this);
 
             return this;
-        });
+        })*/;
 };
 
 export const constMod = function(builder, value) {
@@ -73,24 +126,41 @@ export const varMod = function(builder, initVal = null) {
     let valueId = Symbol('var data');
     
     builder.
-        implement('getResult', () => this.getData(valueId)).
+        addEventListener('onBrickReady', function() {
+            this.setData(valueId, initVal);
+        }).
+        implement('getResult', function() {
+            let res = this.getData(valueId);            
+            return res;
+        }).
         implement('setValue', function(d) {
             this.setData(valueId, d);
             return this;
-        }).
-        addEventListener('onDataSet', function(e, id, data) {
-            console.log(`Data set in Var brick using id "${id}"`)
-        });
+        })/*.
+        /*addEventListener('onDataSet', function(e, id, data) {
+            console.log(`Data set in Var brick using id "${id.toString()}"`)
+        })*/;
 };
 
 export const refMod = function(builder, b_InitRef = null) {
-    let ref = builder.data();
+    builder.load(dataMod);
+    let refId = Symbol('reference');
     
     builder.
-        implement('getResult', () => this.data(ref) ? this.data(ref).getResult() : null).
-        implement('setRef', function(b_ref) {
-            this.data(ref).set(b_ref);
+        implement('getResult', function() {
+            let target = this.getData(refId);
+
+            if(target)
+                return target.getResult();
+
+            return null;
+        }).
+        implement('linkTo', function(b_ref) {
+            this.setData(refId, b_ref);
             return this;
+        }).
+        implement('getLink', function() {
+            return this.getData(refId);
         });
 }
 
@@ -99,7 +169,7 @@ export const mapBasedMod = function(builder) {
     let mapDataId = Symbol('Map data');
 
     builder.
-        shareFrom(this, { mapDataId }).
+        shareFrom(mapBasedMod, { mapDataId }).
         addEventListener('onBrickReady', function() {
             this.setData(mapDataId, {});
         }).
@@ -138,7 +208,7 @@ export const mapMod = function(builder) {
     let mapDataId = builder.getSharedFrom(mapBasedMod).mapDataId;
 
     builder.
-        implement('getResult', function() {
+        implement('getResult', function() {            
             let data = this.getData(mapDataId);
             let res = {};
 
@@ -151,8 +221,7 @@ export const mapMod = function(builder) {
 
 export const arrayMod = function(builder) {
     builder.load(arrayBasedMod);
-    let shared = builder.getSharedFrom(arrayBasedMod);
-    let arrDataId = shared.arrDataId;
+    let arrDataId = builder.getSharedFrom(arrayBasedMod).arrDataId;
 
     builder.
         implement('getResult', function() {
