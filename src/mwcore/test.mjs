@@ -1,13 +1,13 @@
 import * as mw from "./mindwalls.mjs";
-import { outputMod, cachedMod, arrayFuncMod } from "./coreMods.mjs";
+import { dataMod, outputMod, cacheMod, arrayFuncMod } from "./coreMods.mjs";
 
 mw.mods.register('suma', function(builder) {
-    builder.attach(arrayFuncMod, 
+    builder.loadWithArgs(arrayFuncMod, 
         (...nums) => nums.reduce((sum, curr) => sum + curr, 0)
     );
 });
 
-let loader = mw.loader().setDefault(outputMod)/*.setDefault(cachedMod)*/;
+let loader = mw.loader().setDefault(dataMod).setDefault(outputMod)/*.setDefault(cachedMod)*/;
 
 let suma = loader.make.suma().
     append(loader.make.const(1)).

@@ -42,18 +42,23 @@ const _brickBuilder = function() {
     let extsOrder = [];
     let wraps = new Map();
     let shared = new Map();
-    let brickData = new Map();
+    let eventHandlers = new Set();
+    let eventListeners = new Map();
+
+    eventHandlers.add('onBrickReady');
 
     let innerBuilder = {
-        attach: function(mod, ...args) {
+        load(...mods) {
+            for(let i in mods)
+                this.loadWithArgs(mods[i]);
+        },
+        loadWithArgs(mod, ...args) {
             if(!mods.has(mod)) {
                 mods.add(mod);
                 mod(this, ...args);                
             }
-
-            return this;
         },
-        implement: function(name, func) {
+        implement(name, func) {
             if(!exts.has(name)) {
                 exts.set(name, func);
                 extsOrder.push(name);
@@ -61,7 +66,7 @@ const _brickBuilder = function() {
 
             return this;
         },
-        wrap: function(name, wrapper) {
+        wrap(name, wrapper) {
             let currWraps;
 
             if(wraps.has(name)) {
@@ -75,35 +80,37 @@ const _brickBuilder = function() {
             currWraps.push(wrapper);
             return this;
         },
-        data: function(defaultVal = null) {
-            let dataKey = Symbol();
-
-            if(defaultVal)
-                brickData.set(dataKey, defaultVal);
-
-            return dataKey;
-        },
-        share: function(name, sym) {
-            shared.set(name, sym);
+        shareFrom(mod, data) {
+            shared.set(mod, Object.assign({}, data));
             return this;
         },
-        getShared: function(name) {
-            return function() {
-                if(shared.has(name))
-                    return shared.get(name);
-                
-                return null;
-            };
+        getSharedFrom(mod) {
+            return shared.get(mod);
+        },
+        defineEventHandler(name) {
+            if(!eventHandlers.has(name)) {
+                eventHandlers.add(name);
+            }
+
+            return this;
+        },
+        addEventListener(name, listener) {
+            let currListeners;
+
+            if(!eventListeners.has(name)) {
+                currListeners = [];
+                eventListeners.set(name, currListeners);
+            }
+            else {
+                currListeners = eventListeners.get(name);
+            }
+
+            currListeners.push(listener);
+            return this;
         }
     };
 
-    return {
-        attach: innerBuilder.attach,
-        implement: innerBuilder.implement,
-        wrap: innerBuilder.wrap,
-        data: innerBuilder.data,
-        share: innerBuilder.share,
-        getShared: innerBuilder.getShared,
+    return Object.assign({
         ready: function() {
             if(!exts.has('getResult'))                
                 throw 'Attached mods do not implement the method "getResult".';
@@ -114,15 +121,16 @@ const _brickBuilder = function() {
                 return mods.has(mod);
             };
 
-            brick.data = function(sym) {
-                if(sym)
-                    return brickData.get(sym);
+            brick.trigger = function(eventId, ...args) {
+                if(!eventHandlers.has(eventId))
+                    throw `Event handler "${eventId}" is not registered in this brick.`;
 
-                return {
-                    set: function(value) {
-                        brickData.set(sym, value);
-                    }
-                };
+                if(eventListeners.has(eventId)) {
+                    let listeners = eventListeners.get(eventId);
+
+                    for(let i in listeners)
+                        listeners[i].bind(this)(...args);
+                }
             };
 
             /*brick.brick = function(b_brick) {
@@ -137,6 +145,8 @@ const _brickBuilder = function() {
                 brick[extsOrder[i]] = ext;
             }
 
+            //console.log(brick);
+
             for(let [name, specificWraps] of wraps) {
                 for(let i in specificWraps) {
                     let wrapper = specificWraps[i];
@@ -146,20 +156,23 @@ const _brickBuilder = function() {
                         throw `Tried to wrap the method "${name}", but it was not implemented.`;
 
                     brick[name] = function(...args) {
+                        wrapper = wrapper.bind(brick);
+                        currFunc = currFunc.bind(brick);
                         return wrapper(currFunc, ...args);
                     };
                 }
             }
-
-            console.log(brick);
+            
+            brick.trigger('onBrickReady');
             return brick;
         }
-    };
+    }, innerBuilder);
 };
 
 let modsRepo = {
-    output: coreMods.outputMod, 
-    cached: coreMods.cachedMod,
+    output: coreMods.outputMod,
+    dataMod: coreMods.dataMod,
+    cache: coreMods.cacheMod,
     const: coreMods.constMod, 
     var: coreMods.varMod,
     mapBased: coreMods.mapBasedMod,
@@ -180,20 +193,21 @@ let makeHandler = function(defaultMods) {
                 let builder = _brickBuilder();
 
                 for(let [modBuilder, defArgs] of defaultMods)
-                    builder.attach(modBuilder, ...defArgs);
+                    builder.loadWithArgs(modBuilder, ...defArgs);
                 
-                return builder.attach(modsRepo[prop], ...args).ready();
+                builder.loadWithArgs(modsRepo[prop], ...args)
+                return builder.ready();
             };
         }
     }    
 };
 
 export const mods = {
-    register: function(id, modBuilder) {
+    register(id, modBuilder) {
         if(!modsRepo[id])
             modsRepo[id] = modBuilder;
     },
-    getByName: function(name) {
+    getByName(name) {
         return modsRepo[name];
     }
 };
@@ -203,10 +217,10 @@ export const loader = function() {
 
     return {
         make: new Proxy({}, makeHandler(defaultMods)),
-        link: function(ref) {
+        link(ref) {
             
         },
-        setDefault: function(mod, ...args) {
+        setDefault(mod, ...args) {
             defaultMods.set(mod, args);
             return this;
         }            

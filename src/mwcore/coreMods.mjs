@@ -13,7 +13,22 @@ const deepFreeze = x => {
     Object.values(x).filter(x => !Object.isFrozen(x)).forEach(deepFreeze);
 };
 
-export const cachedMod = function(builder) {
+export const dataMod = function(builder) {
+    let dataStore = new Map();
+
+    builder.
+        defineEventHandler('onDataSet').
+        implement('getData', function(id) {
+            return dataStore.get(id);
+        }).
+        implement('setData', function(id, data) {
+            dataStore.set(id, data);
+            this.trigger('onDataSet', this, id, data);
+            return this;
+        });
+}
+
+export const cacheMod = function(builder) {
     let output = null;
     let changed = true;
     let listeners = new Set();
@@ -54,13 +69,17 @@ export const constMod = function(builder, value) {
 };
 
 export const varMod = function(builder, initVal = null) {
-    let value = builder.data(initVal);
+    builder.load(dataMod);
+    let valueId = Symbol('var data');
     
     builder.
-        implement('getResult', () => this.data(value)).
+        implement('getResult', () => this.getData(valueId)).
         implement('setValue', function(d) {
-            this.data(value).set(d);
+            this.setData(valueId, d);
             return this;
+        }).
+        addEventListener('onDataSet', function(e, id, data) {
+            console.log(`Data set in Var brick using id "${id}"`)
         });
 };
 
@@ -76,43 +95,51 @@ export const refMod = function(builder, b_InitRef = null) {
 }
 
 export const mapBasedMod = function(builder) {
-    let mapData = builder.data({});
+    builder.load(dataMod);
+    let mapDataId = Symbol('Map data');
 
     builder.
-        share('mapData', mapData).
+        shareFrom(this, { mapDataId }).
+        addEventListener('onBrickReady', function() {
+            this.setData(mapDataId, {});
+        }).
         implement('setProp', function(name, b_value) {
-            this.data(mapData)[name] = b_value;
+            this.getData(mapDataId)[name] = b_value;
             return this;
         }).
         implement('getProp', function(name) {
-            return this.data(mapData)[name];
+            return this.getData(mapDataId)[name];
         });
 };
 
 export const arrayBasedMod = function(builder) {
-    let arrData = builder.data([]);
+    builder.load(dataMod);
+    let arrDataId = Symbol('Array data');
 
     builder.
-        share('arrData', arrData).
+        shareFrom(arrayBasedMod, { arrDataId }).
+        addEventListener('onBrickReady', function() {
+            this.setData(arrDataId, []);
+        }).
         implement('setPos', function(index, b_value) {
-            this.data(arrData).splice(index, 0, b_value);
+            this.getData(arrDataId).splice(index, 0, b_value);
             return this;
         }).
         implement('append', function(b_value) {
-            return this.setPos(this.data(arrData).length, b_value);
+            return this.setPos(this.getData(arrDataId).length, b_value);
         }).
         implement('getPos', function(index) {
-            return this.data(arrData)[index];
+            return this.getData(arrDataId)[index];
         });
 };
 
 export const mapMod = function(builder) {
-    let mapData = builder.getShared('mapData');
+    builder.load(mapBasedMod);
+    let mapDataId = builder.getSharedFrom(mapBasedMod).mapDataId;
 
     builder.
-        attach(mapBasedMod).
         implement('getResult', function() {
-            let data = this.data(mapData);
+            let data = this.getData(mapDataId);
             let res = {};
 
             for(let [prop, val] of Object.entries(data))
@@ -123,12 +150,13 @@ export const mapMod = function(builder) {
 };
 
 export const arrayMod = function(builder) {
-    let arrData = builder.getShared('arrData');
+    builder.load(arrayBasedMod);
+    let shared = builder.getSharedFrom(arrayBasedMod);
+    let arrDataId = shared.arrDataId;
 
     builder.
-        attach(arrayBasedMod).
         implement('getResult', function() {
-            let data = this.data(arrData);
+            let data = this.getData(arrDataId);
             let res = [];
 
             for(let i in data)
@@ -139,8 +167,9 @@ export const arrayMod = function(builder) {
 };
 
 export const mapFuncMod = function(builder, func) {
+    builder.load(mapMod);
+
     builder.
-        attach(mapMod).
         wrap('getResult', function(wrapped) {
             let res = wrapped();
             return func(res);
@@ -148,10 +177,12 @@ export const mapFuncMod = function(builder, func) {
 };
 
 export const arrayFuncMod = function(builder, func) {
+    builder.load(arrayMod);
+
     builder.
-        attach(arrayMod).
         wrap('getResult', function(wrapped) {
-            let res = wrapped();            
+            let res = wrapped();
             return func(...res);
         });
 };
+
