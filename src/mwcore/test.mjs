@@ -1,29 +1,31 @@
 import * as mw from "./mindwalls.mjs";
-import { dataMod, outputMod, cacheMod, arrayFuncMod } from "./coreMods.mjs";
+import * as bm from "./basicMods.mjs";
 
-mw.mods.register('suma', function(builder) {
-    builder.loadWithArgs(arrayFuncMod, 
-        (...nums) => nums.reduce((sum, curr) => sum + curr, 0)
-    );
-});
+const mods = {
+    suma: () => ({
+        require: [[bm.arrayFunc, (...nums) => nums.reduce((sum, curr) => sum + curr, 0)]]
+    }),
+    pow: () => ({
+        require: [[bm.mapFunc, ({ base, exp }) => Math.pow(base, exp)]]
+    })
+}
 
-let loader = mw.loader().
-    setDefault(dataMod).    
-    setDefault(cacheMod).
-    setDefault(outputMod);
+let mwi = mw.instance().setDefault(
+    bm.data/*, basicMods.cache*/, bm.output
+);
 
-let pow_ = loader.make.ref().setName('ref1');
-let num3_ = loader.make.ref().setName('ref2');
-let num4_ = loader.make.ref().setName('ref3');
+let pow_ = mwi.make(bm.ref).setName('ref1');
+let num3_ = mwi.make(bm.ref).setName('ref2');
+let num4_ = mwi.make(bm.ref).setName('ref3');
 
-let _suma = loader.make.suma().setName('suma').
-    append(loader.make.const(1)).
-    append(loader.make.const(2));
+let _suma = mwi.make(mods.suma).setName('suma').
+    append(mwi.make(bm._const, 1)).
+    append(mwi.make(bm._const, 2));
 
 console.log(_suma.print()); // 3
 
 _suma.append( 
-    num3_.linkTo(loader.make.var(4).setName('var 1'))
+    num3_.linkTo(mwi.make(bm._var, 4).setName('var 1'))
 );
 
 console.log(num3_.print()); // 4
@@ -34,11 +36,9 @@ console.log(num3_.print());
 console.log(_suma.print());
 
 pow_.linkTo(
-    loader.make.mapFunc(
-        ({ base, exp }) => Math.pow(base, exp)
-    ).
-    setProp('base', loader.make.const(2)).
-    setProp('exp', num4_.linkTo(loader.make.var(8)))
+    mwi.make(mods.pow).
+        setProp('base', mwi.make(bm._const, 2)).
+        setProp('exp', num4_.linkTo(mwi.make(bm._var, 8)))
 );
 
 console.log('pow:' + pow_.print());

@@ -1,83 +1,123 @@
-import * as coreMods from "./coreMods.mjs";
+import * as coreMods from "./basicMods.mjs";
 
 export function Brick() {};
 
-const _brickBuilder = function() {
+export const instance = function() {
+    let defaultMods = new Map();
+
+    return {
+        make: function(mod, ...args) {
+            let builder = brickBuilder();
+
+            for(let [defMod, defArgs] of defaultMods)
+                builder.load(defMod, ...defArgs);
+            
+            builder.load(mod, ...args)
+            return builder.ready();
+        },
+        setDefault(...modDefs) {
+            for(let i in modDefs) {
+                let def = modDefs[i];
+
+                if(def instanceof Array) {
+                    let defMod = def[0];
+                    let defArgs = def.slice(1, def.length);
+                    defaultMods.set(defMod, ...defArgs);
+                }
+                else {
+                    defaultMods.set(def, []);
+                }
+            }
+
+            return this;
+        }            
+    }
+};
+
+const brickBuilder = function() {
     let mods = new Set();
     let exts = new Map();
     let extsOrder = [];
     let wraps = new Map();
-    let shared = new Map();
     let eventHandlers = new Set();
     let eventListeners = new Map();
 
     eventHandlers.add('onBrickReady');
 
-    let innerBuilder = {
-        load(...mods) {
-            for(let i in mods)
-                this.loadWithArgs(mods[i]);
-        },
-        loadWithArgs(mod, ...args) {
+    return {
+        load(mod, ...args) {
             if(!mods.has(mod)) {
                 mods.add(mod);
-                mod(this, ...args);                
+                let modSpec = mod(...args);
+
+                if(modSpec.require) {
+                    for(let i in modSpec.require) {
+                        let requireSpec = modSpec.require[i];
+
+                        if(requireSpec instanceof Array) {
+                            let reqMod = requireSpec[0];
+                            let reqArgs = requireSpec.slice(1, requireSpec.length);
+                            this.load(reqMod, ...reqArgs);
+                        }
+                        else {
+                            this.load(requireSpec);
+                        }
+                    }
+                }
+
+                if(modSpec.implement) {
+                    for(let [methodName, methodImpl] of Object.entries(modSpec.implement)) {
+                        if(!exts.has(methodName)) {
+                            exts.set(methodName, methodImpl);
+                            extsOrder.push(methodName);
+                        }
+                    }
+                }
+
+                if(modSpec.wrap) {
+                    for(let [wrapName, wrapper] of Object.entries(modSpec.wrap)) {
+                        let currWraps;
+            
+                        if(wraps.has(wrapName)) {
+                            currWraps = wraps.get(wrapName);
+                        }
+                        else {
+                            currWraps = [];
+                            wraps.set(wrapName, currWraps);
+                        }
+            
+                        currWraps.push(wrapper);
+                    }
+                }
+
+                if(modSpec.defineEventHandler) {
+                    for(let i in modSpec.defineEventHandler) {
+                        let handlerName = modSpec.defineEventHandler[i];
+
+                        if(!eventHandlers.has(handlerName)) {
+                            eventHandlers.add(handlerName);
+                        }
+                    }
+                }
+
+                if(modSpec.addEventListener) {
+                    for(let [lisName, listener] of Object.entries(modSpec.addEventListener)) {
+                        let currListeners;
+            
+                        if(!eventListeners.has(lisName)) {
+                            currListeners = [];
+                            eventListeners.set(lisName, currListeners);
+                        }
+                        else {
+                            currListeners = eventListeners.get(lisName);
+                        }
+            
+                        currListeners.push(listener);
+                    }
+                }
             }
         },
-        implement(name, func) {
-            if(!exts.has(name)) {
-                exts.set(name, func);
-                extsOrder.push(name);
-            }
-
-            return this;
-        },
-        wrap(name, wrapper) {
-            let currWraps;
-
-            if(wraps.has(name)) {
-                currWraps = wraps.get(name);
-            }
-            else {
-                currWraps = [];
-                wraps.set(name, currWraps);
-            }
-
-            currWraps.push(wrapper);
-            return this;
-        },
-        shareFrom(mod, data) {
-            shared.set(mod, Object.assign({}, data));
-            return this;
-        },
-        getSharedFrom(mod) {
-            return shared.get(mod);
-        },
-        defineEventHandler(name) {
-            if(!eventHandlers.has(name)) {
-                eventHandlers.add(name);
-            }
-
-            return this;
-        },
-        addEventListener(name, listener) {
-            let currListeners;
-
-            if(!eventListeners.has(name)) {
-                currListeners = [];
-                eventListeners.set(name, currListeners);
-            }
-            else {
-                currListeners = eventListeners.get(name);
-            }
-
-            currListeners.push(listener);
-            return this;
-        }
-    };
-
-    return Object.assign({
-        ready: function() {
+        ready() {
             if(!exts.has('getResult'))                
                 throw 'Attached mods do not implement the method "getResult".';
 
@@ -128,61 +168,5 @@ const _brickBuilder = function() {
             brick.trigger('onBrickReady');
             return brick;
         }
-    }, innerBuilder);
-};
-
-let modsRepo = {
-    output: coreMods.outputMod,
-    dataMod: coreMods.dataMod,
-    cache: coreMods.cacheMod,
-    const: coreMods.constMod, 
-    var: coreMods.varMod,
-    ref: coreMods.refMod,
-    mapBased: coreMods.mapBasedMod,
-    map: coreMods.mapMod,
-    mapFunc: coreMods.mapFuncMod,
-    arrayBased: coreMods.arrayBasedMod,
-    array: coreMods.arrayMod,
-    arrayFunc: coreMods.arrayFuncMod    
-};
-
-let makeHandler = function(defaultMods) {
-    return {
-        get(target, prop, receiver) {
-            if(!modsRepo[prop])
-                throw `Mod "${prop}" not loaded.`;
-
-            return function(...args) {
-                let builder = _brickBuilder();
-
-                for(let [modBuilder, defArgs] of defaultMods)
-                    builder.loadWithArgs(modBuilder, ...defArgs);
-                
-                builder.loadWithArgs(modsRepo[prop], ...args)
-                return builder.ready();
-            };
-        }
-    };
-};
-
-export const mods = {
-    register(id, modBuilder) {
-        if(!modsRepo[id])
-            modsRepo[id] = modBuilder;
-    },
-    getByName(name) {
-        return modsRepo[name];
-    }
-};
-
-export const loader = function() {
-    let defaultMods = new Map();
-
-    return {
-        make: new Proxy({}, makeHandler(defaultMods)),
-        setDefault(mod, ...args) {
-            defaultMods.set(mod, args);
-            return this;
-        }            
-    }
+    }    
 };
