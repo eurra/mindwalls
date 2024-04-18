@@ -120,6 +120,8 @@ const brickBuilder = function() {
                 throw 'Attached mods do not implement the method "getResult".';
 
             let brick = new Brick();
+            let printFunc = null;
+            let name = 'no name';
 
             brick.is = function(mod) {
                 return mods.has(mod);
@@ -133,6 +135,28 @@ const brickBuilder = function() {
 
                 for(let i in listeners)
                     listeners[i].bind(this)(...args);
+            };
+
+            brick.toString = function() {
+                if(printFunc == null)
+                    //return `brick [${name}] = ${this.getResult()}`;
+                    return "" + this.getResult();
+                
+                return printFunc();
+            };
+
+            brick.setPrinter = function(printer) {
+                printFunc = printer;
+                return this;
+            };
+
+            brick.setName = function(n) {
+                name = n;
+                return this;
+            };
+
+            brick.getName = function() {
+                return name;
             };
 
             /*brick.brick = function(b_brick) {
@@ -174,43 +198,80 @@ const REF_ID = 'REF_ID';
 const MAP_DATA_ID = 'MAP_DATA_ID';
 const ARRAY_DATA_ID = 'ARRAY_DATA_ID';
 
-export const output = function(outputFunc = null) {
-    let name = null;
-
-    if(outputFunc == null) {
-        outputFunc = function() {
-            return "" + this.getResult();
-        };
-    }
-
-    return {
-        implement: {
-            print: outputFunc,
-            setName(n) {
-                name = n;
-                return this;
-            }
-        }
-    };
-};
-
 export const data = function() {
     let dataStore = {};
 
     return {
-        defineEventHandler: [ 'onDataSet' ],
+        //defineEventHandler: [ 'onDataSet' ],
         implement: {
             getData(prop) {
                 return dataStore[prop];
             },
             setData(prop, data) {
                 dataStore[prop] = data;
-                this.trigger('onDataSet', prop, data);
+                //this.trigger('onDataSet', prop, data);
                 return this;
+            },
+            getDataStore() {
+                return dataStore;
             }
         }
     };
 };
+
+const dependencyStack = [];
+const DEPS_SET_ID = 'DEPS_SET_ID';
+
+export const callStack = function() {
+    return {
+        require: [ data ],
+        addEventListener: {
+            onBrickReady() {
+                this.setData(DEPS_SET_ID, new Set());
+            }
+        },
+        implement: {
+            getTracked() {
+                this.getResult();
+                console.log(this.getData(DEPS_SET_ID));
+                return Array.from(this.getData(DEPS_SET_ID)).map((dep) => dep.getName());
+            }
+        },
+        wrap: {
+            getResult(wrapped) {                
+                if(dependencyStack.length > 0 && dependencyStack[dependencyStack.length - 1] != this) {                    
+                    let dep = dependencyStack[dependencyStack.length - 1];
+                    let depsSet = this.getData(DEPS_SET_ID);
+                    
+                    if(!depsSet.has(dep)) {
+                        //console.log(this.getName() + ' => ' + dep.getName());
+                        depsSet.add(dep);                        
+                    }                        
+                }                
+
+                dependencyStack.push(this);
+                let res = wrapped();
+                dependencyStack.pop();
+
+                return res;
+            }/*,
+            getData(wrapped, prop) {
+                if (activeEffect) {
+                    const effects = getSubscribersForProperty(target, key)
+                    effects.add(activeEffect)
+                }
+
+                return wrapped(prop);
+            },
+            setData(wrapped, prop, data) {
+                wrapped(prop, data);
+
+                const effects = getSubscribersForProperty(target, key)
+                effects.forEach((effect) => effect())
+            }*/
+        }
+    };
+}
 
 /*function proxify(object, change) {
     // we use unique field to determine if object is proxy
@@ -247,11 +308,7 @@ export const data = function() {
     return proxy;
 }
 
-export const changeTracker = function(builder) {
-    
-}
-
-export const cacheMod = function(builder) {
+export const cacheMod = function() {
     builder.load(dataMod);
     let cache = null;
     let outdated = true;
@@ -298,10 +355,10 @@ export const _var = function(initVal = null) {
         addEventListener: {
             onBrickReady() {
                 this.setData(VALUE_ID, initVal);
-            },
+            }/*,
             onDataSet(e, id, data) {
-                //console.log(`Data set in Var brick using id "${VALUE_ID}"`)
-            }
+                console.log(`Data set in Var brick using id "${VALUE_ID}"`)
+            }*/
         },
         implement: {
             getResult() {
@@ -316,7 +373,7 @@ export const _var = function(initVal = null) {
     };
 };
 
-export const ref = function(b_InitRef = null) {
+export const ref = function() {
     return {
         require: [ data ],
         implement: {
@@ -399,7 +456,7 @@ export const map = function() {
     };
 };
 
-export const array = function(builder) {
+export const array = function() {
     return {
         require: [ arrayBased ],
         implement: {
