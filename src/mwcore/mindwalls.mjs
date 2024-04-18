@@ -233,7 +233,7 @@ export const callStack = function() {
         implement: {
             getTracked() {
                 this.getResult();
-                console.log(this.getData(DEPS_SET_ID));
+                //console.log(this.getData(DEPS_SET_ID));
                 return Array.from(this.getData(DEPS_SET_ID)).map((dep) => dep.getName());
             }
         },
@@ -244,7 +244,7 @@ export const callStack = function() {
                     let depsSet = this.getData(DEPS_SET_ID);
                     
                     if(!depsSet.has(dep)) {
-                        //console.log(this.getName() + ' => ' + dep.getName());
+                        console.log(this.getName() + ' => ' + dep.getName());
                         depsSet.add(dep);                        
                     }                        
                 }                

@@ -20,8 +20,8 @@ function mainTest() {
     let num4_ = mw.make(ref).setName('ref3');
     
     let _suma = mw.make(suma).setName('suma').
-        append(mw.make(_const, 1)).
-        append(mw.make(_const, 2));
+        append(mw.make(_const, 1).setName('const 1')).
+        append(mw.make(_const, 2).setName('const 2'));
     
     expect(_suma.toString()).toBe('3');    
     
@@ -29,7 +29,7 @@ function mainTest() {
         num3_.linkTo(mw.make(_var, 4).setName('var 1'))
     );
     
-    console.log(num3_.getTracked());
+    console.log(_suma.getTracked());
     
     expect(num3_.toString()).toBe('4');
     expect(_suma.toString()).toBe('7');
