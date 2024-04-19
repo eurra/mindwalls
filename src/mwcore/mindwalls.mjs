@@ -219,7 +219,7 @@ export const data = function() {
     };
 };
 
-const dependencyStack = [];
+let dependencyStack = null;
 const DEPS_SET_ID = 'DEPS_SET_ID';
 
 export const callStack = function() {
@@ -232,19 +232,19 @@ export const callStack = function() {
         },
         implement: {
             getTracked() {
-                this.getResult();
-                //console.log(this.getData(DEPS_SET_ID));
-                return Array.from(this.getData(DEPS_SET_ID)).map((dep) => dep.getName());
+                return Array.from(this.getData(DEPS_SET_ID));
             }
         },
         wrap: {
-            getResult(wrapped) {                
-                if(dependencyStack.length > 0 && dependencyStack[dependencyStack.length - 1] != this) {                    
+            getResult(wrapped) {     
+                if(!dependencyStack) {
+                    dependencyStack = [];
+                }
+                else if(dependencyStack.length > 0 && dependencyStack[dependencyStack.length - 1] != this) {                    
                     let dep = dependencyStack[dependencyStack.length - 1];
                     let depsSet = this.getData(DEPS_SET_ID);
                     
                     if(!depsSet.has(dep)) {
-                        console.log(this.getName() + ' => ' + dep.getName());
                         depsSet.add(dep);                        
                     }                        
                 }                
@@ -253,22 +253,11 @@ export const callStack = function() {
                 let res = wrapped();
                 dependencyStack.pop();
 
+                if(dependencyStack.length == 0)
+                    dependencyStack = null;
+
                 return res;
-            }/*,
-            getData(wrapped, prop) {
-                if (activeEffect) {
-                    const effects = getSubscribersForProperty(target, key)
-                    effects.add(activeEffect)
-                }
-
-                return wrapped(prop);
-            },
-            setData(wrapped, prop, data) {
-                wrapped(prop, data);
-
-                const effects = getSubscribersForProperty(target, key)
-                effects.forEach((effect) => effect())
-            }*/
+            }
         }
     };
 }

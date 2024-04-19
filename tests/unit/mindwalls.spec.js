@@ -15,33 +15,33 @@ function mainTest() {
     
     let mw = instance().setDefault(callStack);
     
-    let pow_ = mw.make(ref).setName('ref1');
-    let num3_ = mw.make(ref).setName('ref2');
-    let num4_ = mw.make(ref).setName('ref3');
+    let pow_ = mw.make(ref).setName('ref_pow');
+    let num3_ = mw.make(ref).setName('ref_num3');
+    let num4_ = mw.make(ref).setName('ref_num4');
     
     let _suma = mw.make(suma).setName('suma').
         append(mw.make(_const, 1).setName('const 1')).
-        append(mw.make(_const, 2).setName('const 2'));
+        append(mw.make(_const, 2).setName('const 2')).
+        trace();
     
-    expect(_suma.toString()).toBe('3');    
+    expect(_suma.toString()).toBe('3');
     
     _suma.append( 
         num3_.linkTo(mw.make(_var, 4).setName('var 1'))
     );
-    
-    console.log(_suma.getTracked());
-    
+        
     expect(num3_.toString()).toBe('4');
     expect(_suma.toString()).toBe('7');
-    
+      
     num3_.getLink().setValue(8);
     expect(num3_.toString()).toBe('8');
     expect(_suma.toString()).toBe('11');
+
+    console.log(num3_.getLink().getTracked().map((x) => x.getName()));
     
-    pow_.linkTo(
-        mw.make(pow).
-            setProp('base', mw.make(_const, 2)).
-            setProp('exp', num4_.linkTo(mw.make(_var, 8)))
+    pow_.linkTo(mw.make(pow).
+        setProp('base', mw.make(_const, 2).setName('const 3')).
+        setProp('exp', num4_.linkTo(mw.make(_var, 8).setName('var 2')))
     );
     
     expect(pow_.toString()).toBe('256');
