@@ -1,4 +1,4 @@
-import { wall, tracking, _const, _var, ref, arrayFunc, mapFunc } from "../../src/mwcore/mindwalls.mjs";
+import { wall, trackChanges, _const, _var, ref, arrayFunc, mapFunc } from "../../src/mwcore/mindwalls.mjs";
 
 describe('MindWalls basics', function () {
     test('check basic usage of mindwalls core', mainTest)
@@ -13,7 +13,7 @@ function mainTest() {
         this.load(mapFunc, ({ base, exp }) => Math.pow(base, exp));
     };
     
-    let main = wall().loadForAll(tracking);
+    let main = wall().loadForAll(trackChanges);
     
     let pow_ = main.make(ref).setName('ref_pow');
     let num3_ = main.make(ref).setName('ref_num3');

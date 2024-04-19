@@ -190,16 +190,13 @@ export function data() {
 
 export function wall() {
     const defaultMods = new Map();
-    let main = null;    
+    let main = null;
 
     return brickBuilder().load(function() {
-        this.load(data);
-        let ctx = this;
-
         return {
             implement: {
                 make(mod, ...args) {
-                    let builder = brickBuilder().load(function () {
+                    let builder = brickBuilder()/*.load(function () {
                         return {
                             implement: {
                                 onlyForBuild: {
@@ -212,12 +209,12 @@ export function wall() {
                                 }
                             }
                         };
-                    });
+                    })*/;
 
                     for(let [defMod, defArgs] of defaultMods)
                         builder.load(defMod, ...defArgs);
                     
-                    builder.load(mod, ...args)
+                    builder.load(mod, ...args);
                     return builder.ready();
                 },
                 loadForAll(...modDefs) {
@@ -251,10 +248,151 @@ export function wall() {
     }).ready();
 }
 
-const TRACK_STACK_ID = 'TRACK_STACK_ID';
+function proxify(object, change) {
+    // we use unique field to determine if object is proxy
+    // we can't test this otherwise because typeof and
+    // instanceof is used on original object
+    if(object.__proxyTracker__) {
+         return object;
+    }
+    
+    var proxy = new Proxy(object, {
+        get: function(target, name) {
+            if(name == '__proxyTracker__')
+                return true;
 
-export function tracking() {
-    let trackSet = new Set();
+            return target[name];
+        },
+        set: function(target, name, value) {
+            var old = target[name];
+
+            if(value && typeof value == 'object') {
+                // new object need to be proxified as well
+                value = proxify(value, change);
+            }
+            target[name] = value;
+            change(target, name, old, value);
+        }
+    });
+
+    for (var prop in object) {
+        if (object.hasOwnProperty(prop) && object[prop] &&
+            typeof object[prop] == 'object') {
+            // proxify all child objects
+            object[prop] = proxify(object[prop], change);
+        }
+    }
+
+    return proxy;
+}
+
+function createTrackableData(tracker, init = null) {
+    let dataTracked = null;
+
+    let tracker = {
+        set value(data) {
+            if(data !== dataTracked) { // The current value it's changing...
+                if(dataTracked) { // A value is currently set...
+                    if(typeof dataTracked == 'object') {
+                        if(dataTracked instanceof Brick && dataTracked.is(dataTracking)) {
+                            dataTracked.removeTracker(tracker);
+                        }
+                        else {
+                            // remove the object tracker mechanism...
+                        }                            
+                    }
+                }
+
+                if(data) { // A non null / undefined data is being setted...
+                    if(typeof data == 'object') {
+                        if(data instanceof Brick && data.is(dataTracking)) {
+                            data.addTracker(tracker);
+                        }
+                        else {
+                            // attach the object tracker mechanism...
+                        }                            
+                    }
+                }
+                
+                dataTracked = data;
+                // inform change
+            }
+        },
+        get value() {
+            return dataTracked;
+        }
+    };
+
+    if(init)
+        tracker.value = init;
+
+    return tracker;
+}
+
+export function dataTracking() {
+    let trackedData = {};
+    let trackers = new Set();
+
+    return {
+        defineEventHandler: [ 'onUpdate', 'onTrackedUpdate' ],
+        implement: {
+            /*initData(prop, initVal = null) {
+                if(trackedData[prop])
+                    throw `A tracker data with prop "${prop}" is already defined.`;
+
+                trackedData[prop] = createTrackableData(this, initVal);
+                return trackedData[prop];
+            },
+            getData(prop) {
+                if(trackedData[prop])
+                    return trackedData[prop].value;
+
+                return null;
+            },
+            setData(prop, data) {
+                if(trackedData[prop])
+                    trackedData[prop].value = data;
+
+                return this;
+            }*/
+            update(id) {
+                this.trigger('onDataChange', id);
+            },
+            track(id, data = null) {
+                if(trackedData[id] != data) { // The current value it's changing...
+                    if(trackedData[id]) { // A value is currently set...
+                        trackedData[id].removeTracker(this);
+                    }
+
+                    let dataIsTrackingBrick = false;
+
+                    if(data) { // A non null / undefined data is being setted...
+                        if(typeof data == 'object' && data instanceof Brick && data.is(dataTracking)) {
+                            data.addTracker(this);
+                            dataIsTrackingBrick = true;
+                        }
+                    }
+                    
+                    trackedData[id] = data;
+                    this.update(id, dataIsTrackingBrick ? data : null);
+                }
+            },            
+            addTracker(tracker) {
+                if(!trackers.has(tracker))
+                    trackers.add(tracker);
+
+                return this;
+            },
+            removeTracker(tracker) {
+                if(trackers.has(tracker))
+                    trackers.delete(tracker);
+
+                return this;
+            }
+        }
+    }
+
+    /*let trackSet = new Set();
     let trackStack = this.getSharedOnWall(TRACK_STACK_ID);
 
     if(trackStack == null) {
@@ -291,44 +429,10 @@ export function tracking() {
                 return res;
             }
         }
-    };
+    };*/
 }
 
-/*function proxify(object, change) {
-    // we use unique field to determine if object is proxy
-    // we can't test this otherwise because typeof and
-    // instanceof is used on original object
-    if (object && object.__proxy__) {
-         return object;
-    }
-    var proxy = new Proxy(object, {
-        get: function(object, name) {
-            if (name == '__proxy__') {
-                return true;
-            }
-
-            return object[name];
-        },
-        set: function(object, name, value) {
-            var old = object[name];
-            if (value && typeof value == 'object') {
-                // new object need to be proxified as well
-                value = proxify(value, change);
-            }
-            object[name] = value;
-            change(object, name, old, value);
-        }
-    });
-    for (var prop in object) {
-        if (object.hasOwnProperty(prop) && object[prop] &&
-            typeof object[prop] == 'object') {
-            // proxify all child objects
-            object[prop] = proxify(object[prop], change);
-        }
-    }
-    return proxy;
-}
-
+/*
 export const cacheMod = function() {
     builder.load(dataMod);
     let cache = null;
@@ -371,15 +475,16 @@ export function _const(value) {
 }
 
 export function _var(initVal = null) {
-    let value = initVal;
+    let innerValue = initVal;
 
     return {
         implement: {
             getResult() {           
-                return value;
+                return innerValue;
             },
             setValue(d) {
-                value = d;
+                innerValue = d;
+                this.triggerChange();
                 return this;
             }
         }
@@ -398,7 +503,7 @@ export function ref() {
                 return null;
             },
             linkTo(brick) {
-                target = brick;;
+                target = brick;
                 return this;
             },
             getTarget() {
@@ -415,7 +520,7 @@ export function mapBased() {
     return {
         implement: {
             setProp(name, b_value) {
-                mapData[name] = b_value;
+                mapData[name] = this.track(b_value);
                 return this;
             },
             getProp(name) {
@@ -433,6 +538,8 @@ export function arrayBased() {
         implement: {
             setPos(index, b_value) {
                 arrayData.splice(index, 0, b_value);
+                this.track(index, b_value);
+
                 return this;
             },
             append(b_value) {
