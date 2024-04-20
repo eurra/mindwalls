@@ -1,4 +1,4 @@
-import { wall, trackChanges, _const, _var, ref, arrayFunc, mapFunc } from "../../src/mwcore/mindwalls.mjs";
+import { wall, tracking, _const, _var, ref, arrayFunc, mapFunc } from "../../src/mwcore/mindwalls.mjs";
 
 describe('MindWalls basics', function () {
     test('check basic usage of mindwalls core', mainTest)
@@ -13,7 +13,15 @@ function mainTest() {
         this.load(mapFunc, ({ base, exp }) => Math.pow(base, exp));
     };
     
-    let main = wall().loadForAll(trackChanges);
+    let main = wall().loadForAll(tracking, function() {
+        return {
+            addEventListener: {
+                onChangeTracked(trackId, val) {
+                    console.log(`Change detected on brick "${this.getName()}" - id: "${trackId}" - val: "${val}".`)
+                }
+            }
+        }
+    });
     
     let pow_ = main.make(ref).setName('ref_pow');
     let num3_ = main.make(ref).setName('ref_num3');
@@ -28,7 +36,7 @@ function mainTest() {
     _suma.append(
         num3_.linkTo(main.make(_var, 4).setName('var 1'))
     );
-        
+    
     expect(num3_.toString()).toBe('4');
     expect(_suma.toString()).toBe('7');
       
@@ -36,7 +44,7 @@ function mainTest() {
     expect(num3_.toString()).toBe('8');
     expect(_suma.toString()).toBe('11');
 
-    //console.log(num3_.getTarget().getTracked().map((x) => x.getName()));
+    console.log(num3_.getTarget().getTrackers().map((x) => x.getName()));
     
     pow_.linkTo(main.make(pow).
         setProp('base', main.make(_const, 2).setName('const 3')).
