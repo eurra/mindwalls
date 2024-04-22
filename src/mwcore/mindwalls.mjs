@@ -47,100 +47,130 @@ export class Brick {
     }
 }
 
-function brickBuilder() {
-    let mods = new Set();
-    let exts = new Map();    
-    let extsOrder = [];    
-    let wraps = new Map();
-    let eventHandlers = new Set();
-    let eventListeners = new Map();
+export function makeBuilder() {
+    const defaultMods = new Map();
 
-    eventHandlers.add('onBrickReady');
+    return {
+        loadForAll(...modDefs) {
+            for(let i in modDefs) {
+                let def = modDefs[i];
 
-    let ctxForBuild = {
-        load(mod, ...args) {
-            if(!mods.has(mod)) {
-                mods.add(mod);                
-                let modSpec = (mod.bind(ctxForBuild))(...args);
-
-                if(!modSpec)
-                    modSpec = {};
-
-                if(modSpec.implement) {
-                    if(modSpec.implement.onlyForBuild) {
-                        for(let [methodName, methodImpl] of Object.entries(modSpec.implement.onlyForBuild)) {
-                            if(!ctxForBuild[methodName])
-                                ctxForBuild[methodName] = methodImpl;
-                        }
-                    }
-
-                    for(let [methodName, methodImpl] of Object.entries(modSpec.implement)) {
-                        if(!exts.has(methodName)) {
-                            exts.set(methodName, methodImpl);
-                            extsOrder.push(methodName);
-                        }
-                    }
+                if(def instanceof Array) {
+                    let defMod = def[0];
+                    let defArgs = def.slice(1, def.length);
+                    defaultMods.set(defMod, ...defArgs);
                 }
-
-                if(modSpec.wrap) {
-                    for(let [wrapName, wrapper] of Object.entries(modSpec.wrap)) {
-                        let currWraps;
-            
-                        if(wraps.has(wrapName)) {
-                            currWraps = wraps.get(wrapName);
-                        }
-                        else {
-                            currWraps = [];
-                            wraps.set(wrapName, currWraps);
-                        }
-            
-                        currWraps.push(wrapper);
-                    }
-                }
-
-                if(modSpec.defineEventHandler) {
-                    for(let i in modSpec.defineEventHandler) {
-                        let handlerName = modSpec.defineEventHandler[i];
-
-                        if(!eventHandlers.has(handlerName)) {
-                            eventHandlers.add(handlerName);
-                        }
-                    }
-                }
-
-                if(modSpec.addEventListener) {
-                    for(let [lisName, listener] of Object.entries(modSpec.addEventListener)) {
-                        let currListeners;
-            
-                        if(!eventListeners.has(lisName)) {
-                            currListeners = [];
-                            eventListeners.set(lisName, currListeners);
-                        }
-                        else {
-                            currListeners = eventListeners.get(lisName);
-                        }
-            
-                        currListeners.push(listener);
-                    }
+                else {
+                    defaultMods.set(def, []);
                 }
             }
 
             return this;
-        }
-    };
+        },
+        make(mainMod, ...args) {
+            // Init loading structures
+            let mods = new Set();
+            let impls = new Map();    
+            let implOrder = [];    
+            let wraps = new Map();
+            let eventHandlers = new Set();
+            let eventListeners = new Map();
 
-    return Object.assign({
-        ready() {
-            if(!exts.has('getResult'))                
+            eventHandlers.add('onBrickReady');
+
+            // Create a build context for the loading process
+            let buildCtx = {
+                load(mod, ...args) {
+                    if(!mods.has(mod)) {
+                        mods.add(mod);                
+                        let modSpec = (mod.bind(buildCtx))(...args);
+
+                        if(!modSpec)
+                            modSpec = {};
+
+                        if(modSpec.implement) {
+                            if(modSpec.implement.onlyForBuild) {
+                                for(let [methodName, methodImpl] of Object.entries(modSpec.implement.onlyForBuild)) {
+                                    if(!buildCtx[methodName])
+                                        buildCtx[methodName] = methodImpl;
+                                }
+                            }
+
+                            for(let [methodName, methodImpl] of Object.entries(modSpec.implement)) {
+                                if(!impls.has(methodName)) {
+                                    impls.set(methodName, methodImpl);
+                                    implOrder.push(methodName);
+                                }
+                            }
+                        }
+
+                        if(modSpec.wrap) {
+                            for(let [wrapName, wrapper] of Object.entries(modSpec.wrap)) {
+                                let currWraps;
+                    
+                                if(wraps.has(wrapName)) {
+                                    currWraps = wraps.get(wrapName);
+                                }
+                                else {
+                                    currWraps = [];
+                                    wraps.set(wrapName, currWraps);
+                                }
+                    
+                                currWraps.push(wrapper);
+                            }
+                        }
+
+                        if(modSpec.defineEventHandler) {
+                            for(let i in modSpec.defineEventHandler) {
+                                let handlerName = modSpec.defineEventHandler[i];
+
+                                if(!eventHandlers.has(handlerName)) {
+                                    eventHandlers.add(handlerName);
+                                }
+                            }
+                        }
+
+                        if(modSpec.addEventListener) {
+                            for(let [lisName, listener] of Object.entries(modSpec.addEventListener)) {
+                                let currListeners;
+                    
+                                if(!eventListeners.has(lisName)) {
+                                    currListeners = [];
+                                    eventListeners.set(lisName, currListeners);
+                                }
+                                else {
+                                    currListeners = eventListeners.get(lisName);
+                                }
+                    
+                                currListeners.push(listener);
+                            }
+                        }
+                    }
+
+                    return this;
+                }
+            };
+
+            // Load default mods (which apply for any brick generated by this builder)
+            for(let [defMod, defArgs] of defaultMods)
+                buildCtx.load(defMod, ...defArgs);
+            
+            // Load the main mod
+            buildCtx.load(mainMod, ...args);      
+
+            if(!impls.has('getResult'))                
                 throw 'Attached mods do not implement the method "getResult".';
 
+            // Prepare the base brick instance
             let brick = new Brick(mods, eventHandlers, eventListeners);            
 
-            for(let i in extsOrder) {
-                let ext = exts.get(extsOrder[i]);
-                brick[extsOrder[i]] = ext;                
+            // Load the implementations, based on their load order
+            for(let i in implOrder) {
+                let ext = impls.get(implOrder[i]);
+                brick[implOrder[i]] = ext;                
             }
 
+            // Load the implementation wrappers
             for(let [name, specificWraps] of wraps) {
                 for(let i = specificWraps.length - 1; i >= 0; i--) {
                     let wrapper = specificWraps[i];
@@ -157,10 +187,11 @@ function brickBuilder() {
                 }
             }
             
+            // On all set, trigger ready event and return the instance
             brick.trigger('onBrickReady');
             return brick;
         }
-    }, ctxForBuild);
+    };
 }
 
 const MAP_DATA_ID = 'MAP_DATA_ID';
@@ -187,53 +218,6 @@ export function data() {
     };
 }
 
-export function wall() {
-    const defaultMods = new Map();
-    let main = null;
-
-    return brickBuilder().load(function() {
-        return {
-            implement: {
-                make(mod, ...args) {
-                    let builder = brickBuilder();
-
-                    for(let [defMod, defArgs] of defaultMods)
-                        builder.load(defMod, ...defArgs);
-                    
-                    builder.load(mod, ...args);
-                    return builder.ready();
-                },
-                loadForAll(...modDefs) {
-                    for(let i in modDefs) {
-                        let def = modDefs[i];
-
-                        if(def instanceof Array) {
-                            let defMod = def[0];
-                            let defArgs = def.slice(1, def.length);
-                            defaultMods.set(defMod, ...defArgs);
-                        }
-                        else {
-                            defaultMods.set(def, []);
-                        }
-                    }
-
-                    return this;
-                },
-                setMain(brick) {
-                    main = brick;
-                    return this;
-                },
-                getResult() {
-                    if(!main)
-                        throw 'Main brick has not been set.'
-
-                    return main.getResult();
-                }
-            }
-        };
-    }).ready();
-}
-
 export function tracking() {
     let trackedData = {};
     let trackers = new Set();
@@ -242,22 +226,24 @@ export function tracking() {
         defineEventHandler: [ 'onChangeTracked' ],
         implement: {
             track(data, trackId, changeFunc = null) {
+
                 if(changeFunc)
-                    changeFunc();
+                    changeFunc(); 
 
                 if(trackedData[trackId] != data) { // The current value it's changing...
+
                     if(trackedData[trackId]) { // A value is currently set...
                         if(typeof trackedData[trackId] == 'object' && trackedData[trackId] instanceof Brick && trackedData[trackId].is(tracking))
                             trackedData[trackId].removeTracker(this);
                     }
 
-                    if(data) { // A non null / undefined data is being setted...
+                    if(data != null && data != undefined) { // A non null / non undefined data is being setted...
                         if(typeof data == 'object' && data instanceof Brick && data.is(tracking))
                             data.addTracker(this);
                     }
                     
                     trackedData[trackId] = data;
-                    this.trigger('onChangeTracked', trackId, data);
+                    this.trigger('onChangeTracked', data, trackId);
                 }
 
                 return data;
@@ -281,29 +267,47 @@ export function tracking() {
     }
 }
 
-/*
-export const cacheMod = function() {
-    builder.load(dataMod);
+export function cached() {
     let cache = null;
     let outdated = true;
 
-    builder.
-        addEventListener('onDataSet', function(e, id, data) {
-            outdated = true;
-
-            if(typeof data == 'object') {
-                value = proxify(value, change);
+    return {
+        addEventListener: {
+        },
+        implement: {
+            update() {
+                outdated = true;
+                this.getResult();
             }
-        }).
-        wrap('getResult', function(wrapped) {
-            if(outdated) {                
-                outdated = false;                
-                cache = wrapped();                
-            }
+        },
+        wrap: {
+            getResult(wrapped) {
+                if(outdated) {                
+                    outdated = false;                
+                    cache = wrapped();                
+                }
 
-            return cache;
-        });
-};*/
+                return cache;
+            }
+        }
+    };
+}
+
+export function reactive() {
+    this.load(tracking);
+    this.load(cached);    
+
+    return {
+        addEventListener: {
+            onChangeTracked() {
+                this.update();
+
+                for(let tracker of this.getTrackers())
+                    tracker.trigger('onChangeTracked', this);
+            }
+        }
+    };
+}
 
 const deepFreeze = x => {
     Object.freeze(x);
@@ -324,22 +328,19 @@ export function _const(value) {
 }
 
 export function _var(initVal = null) {
-    let innerValue = null;
+    let innerValue = initVal;
     const VAR_ID = 'VAR_ID';
 
     return {
-        addEventListener: {
-            onBrickReady() {
-                if(initVal)
-                    this.setValue(initVal);
-            }
-        },
         implement: {
             getResult() {
                 return innerValue;
             },
             setValue(d) {
-                innerValue = this.track(d, VAR_ID);
+                this.track(d, VAR_ID, () => 
+                    innerValue = d
+                );
+
                 return this;
             }
         }
@@ -359,7 +360,10 @@ export function ref() {
                 return null;
             },
             linkTo(brick) {
-                target = this.track(brick, REF_ID);                
+                this.track(brick, REF_ID, () => 
+                    target = brick
+                );
+
                 return this;
             },
             getTarget() {
@@ -376,7 +380,10 @@ export function mapBased() {
     return {
         implement: {
             setProp(name, b_value) {
-                this.track(b_value, name, () => mapData[name] = b_value);
+                this.track(b_value, name, () => 
+                    mapData[name] = b_value
+                );
+
                 return this;
             },
             getProp(name) {
@@ -393,11 +400,21 @@ export function arrayBased() {
     return {
         implement: {
             setPos: function(index, b_value) {
-                this.track(b_value, index, () => arrayData[index] = b_value);
+                this.track(b_value, index, () => 
+                    arrayData.splice(index, 0, b_value)
+                );
+
                 return this;
             },
             append(b_value) {
                 return this.setPos(arrayData.length, b_value);
+            },
+            remove(index) {
+                this.track(null, index, () => 
+                    arrayData.splice(index, 1)
+                );
+
+                return this;
             },
             getPos(index) {
                 return arrayData[index];
@@ -442,28 +459,153 @@ export function array() {
     };
 }
 
-export function mapFunc(func) {
+export function mapFunc(initFunc) {
     this.load(map);
+    let func = initFunc;
+    const FUNC_ID = 'MAP_FUNC_ID';
 
     return {
+        implement: {
+            setFunction(f) {
+                this.track(f, FUNC_ID, () => 
+                    func = f
+                );
+            }
+        },
         wrap: {
             getResult(wrapped) {
                 let res = wrapped();
-                return func(res);
+                return (func.getResult())(res);
             }
         }
     };
 }
 
-export function arrayFunc(func) {
+export function arrayFunc(initFunc) {
     this.load(array);
+    let func = initFunc;
+    const FUNC_ID = 'ARRAY_FUNC_ID';
 
     return {
+        implement: {
+            setFunction(f) {
+                this.track(f, FUNC_ID, () => 
+                    func = f
+                );
+            }
+        },
         wrap: {
             getResult(wrapped) {
                 let res = wrapped();
-                return func(...res);
+                return (func.getResult())(...res);
             }
         }
     };
 }
+
+function parser() {
+    return [
+        {
+            name: "Generic",
+            check() {
+                return true;
+            },
+            configure(brick, entry) {
+                if(entry._name)
+                    brick.setName(entry._name);
+            }
+        },
+        {
+            name: "Constant",
+            check(entry) {
+                return entry._const;
+            },
+            parse(entry) {
+                return {
+                    value: eval(`(${entry._const})`) // TODO: improve with parser
+                };
+            },
+            make(parsedData, builder) {
+                return builder.make(_var, parsedData.value); 
+            }
+        },
+        {
+            name: "Variable",
+            check(entry) {
+                return entry._var;
+            },
+            parse(entry) {
+                return {
+                    value: eval(`(${entry._var})`) // TODO: improve with parser
+                };
+            },
+            make(parsedData, builder) {
+                return builder.make(_var, parsedData.value); 
+            }
+        },
+        {
+            name: "Array function",
+            check(entry) {
+                return entry._type && entry._type == 'arrayFunc';
+            },
+            parse(entry, parser) {
+                if(!entry.func)
+                    throw "arrayFunc entry must define a function";
+
+                if(!entry.params || (typeof entry.params != 'object') || !(entry.params instanceof Array))
+                    throw "arrayFunc entry must define a parameter array";
+
+                let res = {
+                    func: parser.getParser(entry.func),
+                    params: []
+                };
+
+                for(let i in entry.params)
+                    res.params.push(parser.getParser(entry.params[i]));
+
+                return res;
+            },
+            make(parsedData, builder) {
+                let brick = builder.
+                    make(arrayFunc, parsedData.func());
+
+                for(let i in parsedData.params)
+                    brick.append((parsedData.params[i])());
+
+                return brick;
+            }
+        },
+        {
+            name: "Map function",
+            check(entry) {
+                return entry._type && entry._type == 'mapFunc';
+            },
+            parse(entry, parser) {
+                if(!entry.func)
+                    throw "mapFunc entry must define a function";
+
+                if(!entry.params || (typeof entry.params != 'object'))
+                    throw "mapFunc entry must define a parameter array";
+
+                let res = {
+                    func: parser.getParser(entry.func),
+                    params: {}
+                };
+
+                for(let [prop, val] of Object.entries(entry.params))
+                    res.params[prop] = parser.getParser(val);
+
+                return res;
+            },
+            make(parsedData, builder) {
+                let brick = builder.
+                    make(mapFunc, parsedData.func());
+
+                for(let [prop, val] of Object.entries(parsedData.params))
+                    brick.setProp(prop, val());
+
+                return brick;
+            }
+        }
+    ];
+};
