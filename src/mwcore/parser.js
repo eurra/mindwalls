@@ -5,8 +5,7 @@ let example = [
         { _var: 5 }, { _ref: "num" }
     ]},
     { 
-        type: "mapFunc", 
-        func: {
+        type: "mapFunc", func: {
             name: "pow",
             _const: function({base, exp}) { 
                 return Math.pow(base, exp); 
@@ -18,7 +17,7 @@ let example = [
         }
     },
     { name: "num", _const: 5 },
-    { 
+    {
         _name: "suma", 
         _const: function(...nums) { 
             return nums.reduce((sum, curr) => sum + curr, 0); 

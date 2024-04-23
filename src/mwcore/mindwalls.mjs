@@ -1,3 +1,9 @@
+const deepFreeze = x => {
+    Object.freeze(x);
+    Object.values(x).filter(x => !Object.isFrozen(x)).forEach(deepFreeze);
+    return x;
+};
+
 export class Brick {
     #printFunc = null;
     #name = 'no name';
@@ -309,11 +315,6 @@ export function reactive() {
     };
 }
 
-const deepFreeze = x => {
-    Object.freeze(x);
-    Object.values(x).filter(x => !Object.isFrozen(x)).forEach(deepFreeze);
-};
-
 export function _const(value) {
     return {
         implement: {
@@ -502,6 +503,44 @@ export function arrayFunc(initFunc) {
         }
     };
 }
+
+export const _var = {
+    parser: {
+        name: "Variable",
+        check(entry) {
+            return entry._var;
+        },
+        parse(entry) {
+            return {
+                value: eval(`(${entry._var})`) // TODO: improve with parser
+            };
+        },
+        make(parsedData, builder) {
+            return builder.make(_var, parsedData.value); 
+        }
+    },
+    builder(initVal = null) {
+        let innerValue = initVal;
+        const VAR_ID = 'VAR_ID';
+    
+        return {
+            implement: {
+                getResult() {
+                    return innerValue;
+                },
+                setValue(d) {
+                    this.track(d, VAR_ID, () => 
+                        innerValue = d
+                    );
+    
+                    return this;
+                }
+            }
+        };
+    }
+};
+
+
 
 function parser() {
     return [
