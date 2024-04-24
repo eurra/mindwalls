@@ -4,6 +4,8 @@ describe('MindWalls basics', function () {
     test('check basic usage of mindwalls core', mainTest)
 });
 
+brick()
+
 function mainTest() { 
     let builder = makeBuilder().loadForAll(reactive);
     
@@ -46,6 +48,14 @@ function mainTest() {
         setProp('exp', num4_.linkTo(builder.make(_var, 8).setName('var 2'))).
         setName("pow")
     );
+
+    make(mapFunc, {
+        func: ({ base, exp }) => Math.pow(base, exp),
+        args: {
+            base: 2,
+            exp: ref("var 2")
+        }
+    })
     
     expect(pow_.toString()).toBe('256');
     
