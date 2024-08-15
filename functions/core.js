@@ -10,7 +10,7 @@ module.exports = {
 				let res = 0;
 
 				for(let i = 0; i < arguments.length; i++)
-					res += arguments[i];
+					res += Number(arguments[i]);
 
 				return res;
 			}
