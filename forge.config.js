@@ -10,7 +10,7 @@ module.exports = {
   },
   rebuildConfig: {},
   makers: [
-    {
+    /*{
       name: '@electron-forge/maker-squirrel',
       config: {
         authors: 'Enrique Urra',
@@ -18,11 +18,12 @@ module.exports = {
         certificateFile: './cert.pfx',
         certificatePassword: process.env.CERTIFICATE_PASSWORD
       },
-    }/*,
+    },*/
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-    },
+      config: {},
+      //platforms: ['win32'],
+    }/*,
     {
       name: '@electron-forge/maker-deb',
       config: {},
@@ -31,6 +32,18 @@ module.exports = {
       name: '@electron-forge/maker-rpm',
       config: {},
     },*/
+  ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'eurra',
+          name: 'mindwalls'
+        },
+        prerelease: true
+      }
+    }
   ],
   plugins: [
     {
