@@ -3,14 +3,22 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
+    name: 'Mindwalls',
     asar: true,
+    osxSign: {},
+    appCategoryType: 'public.app-category.developer-tools'
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
-    },
+      config: {
+        authors: 'Enrique Urra',
+        description: 'Mindwalls proto',
+        certificateFile: './cert.pfx',
+        certificatePassword: process.env.CERTIFICATE_PASSWORD
+      },
+    }/*,
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],
@@ -22,7 +30,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-rpm',
       config: {},
-    },
+    },*/
   ],
   plugins: [
     {
@@ -41,16 +49,4 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
-  publishers: [
-    {
-      name: '@electron-forge/publisher-github',
-      config: {
-        repository: {
-          owner: 'eurra',
-          name: 'mindwalls'
-        },
-        prerelease: true
-      }
-    }
-  ]
 };

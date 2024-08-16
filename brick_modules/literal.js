@@ -3,10 +3,9 @@ let hotkeys = require('hotkeys-js');
 
 function editLiteralBrick(brick, readyCallback) {
 	brick.getContent().children().hide();
-
+	
 	let input = $('<input class="literalEdit" type="text" value="' + brick.getValue() + '"/>').
-		appendTo(brick.getContent()).
-		select();
+		appendTo(brick.getContent()).select();
 
 	function resizeInput(x) {
 		x.attr('size', x.val().length);		
@@ -15,12 +14,14 @@ function editLiteralBrick(brick, readyCallback) {
 	input.keyup(() => resizeInput(input));
 	resizeInput(input);
 
+	console.log(input.get());
+
 	hotkeys('enter,esc', {
 			scope: 'edit-brick',
-			element: input.get()
+			element: input.get(0)
 		}, 
-		function(e, handler) {
-			if(handler.key == 'enter') {
+		function(e, handler) {			
+			if(handler.key == 'enter') {				
 				let val = input.val();							
 				brick.setValue(val);
 			}
