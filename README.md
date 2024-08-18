@@ -7,9 +7,9 @@
 - How to evaluate and improve a brick-based implementation through a minimum feedback loop
 possible.
 
-The latter one is particularly relevant, as the main benefit of a visual programming environment is to gather immediate feedback from the program that is being built, condition that source code cannot always provide. On the other side, source code provides program editing benefits that are difficult to comply for visual environments, such as lower viscosity, i.e., the ease to modify the program structure while preserving its design.
+The latter one is particularly relevant, as the main benefit of a visual programming environment is to gather immediate feedback from the program that is being built, condition that textual source code cannot always provide. On the other side, textual source code provides program editing benefits that are difficult to comply for visual environments, such as lower viscosity, i.e., the ease to modify the program structure while preserving its design.
 
-Mindwalls, as [many other initiatives](https://github.com/yairchu/awesome-structure-editors/tree/main), seek the progress towards new programming paradigms and models, by raising the abstraction level of current methods and making the programming activity more accesible to different developer profiles. As programming is a deeply creative process, it is significant to provide better tools for the purpose. Several people has deepened more in this topic, such as Bret Victor on her essay [learnable programming](https://worrydream.com/LearnableProgramming/) (check it out!).
+Mindwalls, as [many other initiatives](https://github.com/yairchu/awesome-structure-editors/tree/main), seek the progress towards new programming paradigms and models, by raising the abstraction level of current methods and making the programming activity more accesible to different developer profiles. As programming is a deeply creative process, it is significant to provide better tools for the purpose. Several people has deepened more in this topic, such as Bret Victor on his essay [learnable programming](https://worrydream.com/LearnableProgramming/) (check it out!).
 
 In this prototype, walls are defined by nesting multiple bricks from right to left, such as the following example diagram:
 
